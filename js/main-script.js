@@ -8,7 +8,7 @@ import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 /* GLOBAL VARIABLES */
 //////////////////////
 
-var camera, scene, renderer;
+var camera, camera1, camera2, camera3, camera4, camera5, camera6, scene, renderer;
 
 var materials = [new THREE.MeshBasicMaterial({ color: 0xbbbbbb, wireframe: true }),
                  new THREE.MeshBasicMaterial({ color: 0xffdd00, wireframe: true }),
@@ -77,16 +77,35 @@ function createScene() {
 /* CREATE CAMERA(S) */
 //////////////////////
 
-function createCamera() {
+function createPerspectiveCamera(x, y, z) {
     'use strict';
-    camera = new THREE.PerspectiveCamera(70,
+    var camera = new THREE.PerspectiveCamera(70,
                                          window.innerWidth / window.innerHeight,
                                          1,
                                          1000);
-    camera.position.x = 250;
-    camera.position.y = 250;
-    camera.position.z = 250;
+    camera.position.x = x;
+    camera.position.y = y;
+    camera.position.z = z;
     camera.lookAt(scene.position);
+
+    return camera;
+}
+
+
+function createOrthographicCamera(x, y, z) {
+    'use strict';
+    var camera = new THREE.OrthographicCamera(window.innerWidth / -4,
+                                          window.innerWidth / 4,
+                                          window.innerHeight / 4,
+                                          window.innerHeight / -4,
+                                          1,
+                                          10000);
+    camera.position.x = x;
+    camera.position.y = y;
+    camera.position.z = z;
+    camera.lookAt();
+
+    return camera;
 }
 
 /////////////////////
@@ -393,7 +412,15 @@ function init() {
     document.body.appendChild(renderer.domElement);
 
     createScene();
-    createCamera();
+    camera1 = createOrthographicCamera(0, 0, 2000);
+    camera2 = createOrthographicCamera(2000, 0, 0);
+    camera3 = createOrthographicCamera(0, 2000, 0);
+    camera4 = createPerspectiveCamera(250, 250, 250);
+    camera5 = createPerspectiveCamera(-250, 250, 250);
+    camera6 = createPerspectiveCamera(250, -250, 250);
+
+    camera= camera1;
+
 
     window.addEventListener("keydown", onKeyDown);
 
@@ -426,22 +453,22 @@ function onKeyDown(e) {
 
     switch (e.keyCode) {
     case 49: //1
-        //material.wireframe = !material.wireframe;
+        camera = camera1;
         break;
     case 50: //2
-        //material.wireframe = !material.wireframe;
+        camera = camera2;
         break;
     case 51: //3
-        //material.wireframe = !material.wireframe;
+        camera = camera3;
         break;
     case 52: //4
-        //material.wireframe = !material.wireframe;
+        camera = camera4;
         break;
     case 53: //5
-        //material.wireframe = !material.wireframe;
+        camera = camera5;
         break;
     case 54: //6
-        //material.wireframe = !material.wireframe;
+        camera = camera6;
         break;
     case 55: //7
         for (let i = 0; i < materials.length; i++)
