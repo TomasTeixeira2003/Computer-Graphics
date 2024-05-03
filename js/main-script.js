@@ -20,45 +20,45 @@ var geometry, mesh;
 /* CONSTANTS */
 ///////////////
 
-const HBASE = 10;
-const WBASE = 20;
+const H_BASE = 10;
+const W_BASE = 20;
 
-const HTOWER = 220;
-const WTOWER = 10; 
+const H_TOWER = 220;
+const W_TOWER = 10; 
 
-const HJIBCJIB = 10;
-const LCJIB = 50;                        // l_clança
-const LJIB = 180;                        // l_lança
-const LJIBCJIB = LCJIB + WTOWER + LJIB;  // l_clança + w_torre + l_lança
+const H_JIB_CJIB = 10;
+const L_CJIB = 50;                        // l_clança
+const L_JIB = 180;                        // l_lança
+const L_JIB_CJIB = L_CJIB + W_TOWER + L_JIB;  // l_clança + w_torre + l_lança
 
-const WPENDANT = 2;
+const W_PENDANT = 1;
 const ALPHA = 4 * Math.PI / 180;   // rad(4°)
 const BETA = 15 * Math.PI / 180;   // rad(15°)
 
-const LPENDANT1 = 120;
-const LPENDANT2 = 30;
+const L_FRONT_PENDANT = 120;
+const L_BACK_PENDANT = 30;
 
-const WCABIN = 10;
-const HCABIN = 15;
-const LCABIN = 20;
+const W_CABIN = 10;
+const H_CABIN = 15;
+const L_CABIN = 20;
 
-const WCWEIGHT = 10;
-const HCWEIGHT = 20;
-const LCWEIGHT = 10;
-const DCWEIGHT = 25;
+const W_CWEIGHT = 10;
+const H_CWEIGHT = 20;
+const L_CWEIGHT = 10;
+const D_CWEIGHT = 25;
 
-const WTROLLEY = 10;
-const HTROLLEY = 5;
-const DTROLLEY = 80;
+const W_TROLLEY = 10;
+const H_TROLLEY = 5;
+const D_TROLLEY = 80;
 
-const WCABLE = WPENDANT;
-const HCABLE = 50;              // TODO: ADD DELTA2
+const W_CABLE = W_PENDANT;
+const H_CABLE = 50;              // TODO: ADD DELTA2
 
-const WBLOCK = 8;
-const HBLOCK = 4;
+const W_BLOCK = 8;
+const H_BLOCK = 4;
 
-const WCLAW = 8;
-const HCLAW = 10;
+const W_CLAW = 8;
+const H_CLAW = 10;
 
 /////////////////////
 /* CREATE SCENE(S) */
@@ -103,7 +103,7 @@ function createOrthographicCamera(x, y, z) {
     camera.position.x = x;
     camera.position.y = y;
     camera.position.z = z;
-    camera.lookAt();
+    camera.lookAt(scene.position);
 
     return camera;
 }
@@ -119,63 +119,63 @@ function createOrthographicCamera(x, y, z) {
 function addCraneBase(obj, x, y, z) {
     'use strict';
 
-    geometry = new THREE.BoxGeometry(WBASE, HBASE, WBASE);
+    geometry = new THREE.BoxGeometry(W_BASE, H_BASE, W_BASE);
     mesh = new THREE.Mesh(geometry, materials[0]);
-    mesh.position.set(x, y + HBASE/2, z);
+    mesh.position.set(x, y + H_BASE/2, z);
     obj.add(mesh);
 }
 
 function addCraneTower(obj, x, y, z) {
     'use strict';
 
-    geometry = new THREE.BoxGeometry(WTOWER, HTOWER, WTOWER);
+    geometry = new THREE.BoxGeometry(W_TOWER, H_TOWER, W_TOWER);
     mesh = new THREE.Mesh(geometry, materials[1]);
-    mesh.position.set(x, y + HTOWER/2 + HBASE, z);
+    mesh.position.set(x, y + H_TOWER/2 + H_BASE, z);
     obj.add(mesh);
 }
 
 function addFrontPendant(obj, x, y, z) {
     'use strict';
 
-    geometry = new THREE.CylinderGeometry(WPENDANT/2, WPENDANT/2, LPENDANT1); 
+    geometry = new THREE.CylinderGeometry(W_PENDANT/2, W_PENDANT/2, L_FRONT_PENDANT); 
     mesh = new THREE.Mesh(geometry, materials[0]);
     mesh.rotation.x = -Math.PI / 2 + ALPHA;
-    mesh.position.set(x, y + Math.sin(ALPHA) * LPENDANT1/2 + HJIBCJIB/2, z + WTOWER/2 - LPENDANT1/2 + Math.cos(ALPHA) * LPENDANT1);
+    mesh.position.set(x, y + Math.sin(ALPHA) * L_FRONT_PENDANT/2 + H_JIB_CJIB/2, z + W_TOWER/2 - L_FRONT_PENDANT/2 + Math.cos(ALPHA) * L_FRONT_PENDANT);
     obj.add(mesh);
 }
 
 function addRearPendant(obj, x, y, z) {
     'use strict';
 
-    geometry = new THREE.CylinderGeometry(WPENDANT/2, WPENDANT/2, LPENDANT2); 
+    geometry = new THREE.CylinderGeometry(W_PENDANT/2, W_PENDANT/2, L_BACK_PENDANT); 
     mesh = new THREE.Mesh(geometry, materials[0]);
     mesh.rotation.x = Math.PI / 2 - BETA;
-    mesh.position.set(x, y + Math.sin(BETA) * LPENDANT2/2 + HJIBCJIB/2, z - WTOWER/2 + LPENDANT2/2 - Math.cos(BETA) * LPENDANT2);
+    mesh.position.set(x, y + Math.sin(BETA) * L_BACK_PENDANT/2 + H_JIB_CJIB/2, z - W_TOWER/2 + L_BACK_PENDANT/2 - Math.cos(BETA) * L_BACK_PENDANT);
     obj.add(mesh);
 }
 
 function addCabin(obj, x, y, z) {
     'use strict';
     
-    geometry = new THREE.BoxGeometry(WCABIN, HCABIN, LCABIN);
+    geometry = new THREE.BoxGeometry(W_CABIN, H_CABIN, L_CABIN);
     mesh = new THREE.Mesh(geometry, materials[2]);
-    mesh.position.set(x - WCABIN/2 - WTOWER/2, y - HCABIN/2 - HJIBCJIB/2, z + WCABIN/2 - WTOWER/2);
+    mesh.position.set(x - W_CABIN/2 - W_TOWER/2, y - H_CABIN/2 - H_JIB_CJIB/2, z + W_CABIN/2 - W_TOWER/2);
     obj.add(mesh);
 }
 
 function addCounterWeight(obj, x, y, z) {
     'use strict';
 
-    geometry = new THREE.BoxGeometry(WCWEIGHT, HCWEIGHT, WCWEIGHT);
+    geometry = new THREE.BoxGeometry(W_CWEIGHT, H_CWEIGHT, W_CWEIGHT);
     mesh = new THREE.Mesh(geometry, materials[2]);
-    mesh.position.set(x, y + HJIBCJIB/2 - HCWEIGHT/2, z - WTOWER/2 - LCWEIGHT - DCWEIGHT);
+    mesh.position.set(x, y + H_JIB_CJIB/2 - H_CWEIGHT/2, z - W_TOWER/2 - L_CWEIGHT - D_CWEIGHT);
     obj.add(mesh);
 }
 
 function addCable(obj, x, y, z) {
-    geometry = new THREE.CylinderGeometry(WCABLE/2, WCABLE/2, HCABLE); 
+    geometry = new THREE.CylinderGeometry(W_CABLE/2, W_CABLE/2, H_CABLE); 
     mesh = new THREE.Mesh(geometry, materials[0]);
-    mesh.position.set(x, y - HCABLE/2 - HTROLLEY/2, z);
+    mesh.position.set(x, y - H_CABLE/2 - H_TROLLEY/2, z);
     obj.add(mesh);
 }
 
@@ -184,28 +184,28 @@ function addClaw1(obj, x, y, z) {
 
     // creates a right tetrahedron
     const vertices = new Float32Array([
-        -WCLAW/2, -HCLAW/2, -WCLAW/2,
-         WCLAW/2, -HCLAW/2, -WCLAW/2,
-        -WCLAW/2,  HCLAW/2, -WCLAW/2,
+        -W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
+         W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
+        -W_CLAW/2,  H_CLAW/2, -W_CLAW/2,
 
-        -WCLAW/2, -HCLAW/2, -WCLAW/2,
-        -WCLAW/2, -HCLAW/2,  WCLAW/2,
-        -WCLAW/2,  HCLAW/2, -WCLAW/2,
+        -W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
+        -W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
+        -W_CLAW/2,  H_CLAW/2, -W_CLAW/2,
 
-        -WCLAW/2, -HCLAW/2, -WCLAW/2,
-        -WCLAW/2, -HCLAW/2,  WCLAW/2,
-         WCLAW/2, -HCLAW/2, -WCLAW/2,
+        -W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
+        -W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
+         W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
 
-         WCLAW/2, -HCLAW/2, -WCLAW/2,
-        -WCLAW/2,  HCLAW/2, -WCLAW/2,
-        -WCLAW/2, -HCLAW/2,  WCLAW/2,
+         W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
+        -W_CLAW/2,  H_CLAW/2, -W_CLAW/2,
+        -W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
     ]);
 
     geometry.setAttribute('position', new THREE.BufferAttribute( vertices, 3 ) );
 
     mesh = new THREE.Mesh(geometry, materials[0]);
     mesh.rotation.z = Math.PI;
-    mesh.position.set(x, y - HCLAW/2 - HBLOCK, z - WBLOCK/2);
+    mesh.position.set(x, y - H_CLAW/2 - H_BLOCK, z - W_BLOCK/2);
 
     // TODO: ADD THETA2
 
@@ -217,27 +217,27 @@ function addClaw2(obj, x, y, z) {
 
     // creates a right tetrahedron
     const vertices = new Float32Array([
-        -WCLAW/2, -HCLAW/2, -WCLAW/2,
-         WCLAW/2, -HCLAW/2, -WCLAW/2,
-         WCLAW/2,  HCLAW/2, -WCLAW/2,
+        -W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
+         W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
+         W_CLAW/2,  H_CLAW/2, -W_CLAW/2,
 
-        -WCLAW/2, -HCLAW/2, -WCLAW/2,
-        -WCLAW/2, -HCLAW/2,  WCLAW/2,
-         WCLAW/2,  HCLAW/2, -WCLAW/2,
+        -W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
+        -W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
+         W_CLAW/2,  H_CLAW/2, -W_CLAW/2,
 
-        -WCLAW/2, -HCLAW/2, -WCLAW/2,
-        -WCLAW/2, -HCLAW/2,  WCLAW/2,
-         WCLAW/2, -HCLAW/2, -WCLAW/2,
+        -W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
+        -W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
+         W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
 
-         WCLAW/2, -HCLAW/2, -WCLAW/2,
-         WCLAW/2,  HCLAW/2, -WCLAW/2,
-        -WCLAW/2, -HCLAW/2,  WCLAW/2,
+         W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
+         W_CLAW/2,  H_CLAW/2, -W_CLAW/2,
+        -W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
     ]);
 
     geometry.setAttribute('position', new THREE.BufferAttribute( vertices, 3 ) );
     mesh = new THREE.Mesh(geometry, materials[0]);
     mesh.rotation.z = Math.PI;
-    mesh.position.set(x, y - HCLAW/2 - HBLOCK, z + WBLOCK/2);
+    mesh.position.set(x, y - H_CLAW/2 - H_BLOCK, z + W_BLOCK/2);
 
     // TODO: ADD THETA2
 
@@ -249,27 +249,27 @@ function addClaw3(obj, x, y, z) {
 
     // creates a right tetrahedron
     const vertices = new Float32Array([
-         WCLAW/2, -HCLAW/2,  WCLAW/2,
-        -WCLAW/2, -HCLAW/2,  WCLAW/2,
-         WCLAW/2,  HCLAW/2,  WCLAW/2,
+         W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
+        -W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
+         W_CLAW/2,  H_CLAW/2,  W_CLAW/2,
 
-         WCLAW/2, -HCLAW/2,  WCLAW/2,
-         WCLAW/2, -HCLAW/2, -WCLAW/2,
-         WCLAW/2,  HCLAW/2,  WCLAW/2,
+         W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
+         W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
+         W_CLAW/2,  H_CLAW/2,  W_CLAW/2,
 
-         WCLAW/2, -HCLAW/2,  WCLAW/2,
-         WCLAW/2, -HCLAW/2, -WCLAW/2,
-        -WCLAW/2, -HCLAW/2,  WCLAW/2,
+         W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
+         W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
+        -W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
 
-        -WCLAW/2, -HCLAW/2,  WCLAW/2,
-         WCLAW/2,  HCLAW/2,  WCLAW/2,
-         WCLAW/2, -HCLAW/2, -WCLAW/2,
+        -W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
+         W_CLAW/2,  H_CLAW/2,  W_CLAW/2,
+         W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
     ]);
 
     geometry.setAttribute('position', new THREE.BufferAttribute( vertices, 3 ) );
     mesh = new THREE.Mesh(geometry, materials[0]);
     mesh.rotation.z = Math.PI;
-    mesh.position.set(x - WBLOCK/2, y - HCLAW/2 - HBLOCK, z);
+    mesh.position.set(x - W_BLOCK/2, y - H_CLAW/2 - H_BLOCK, z);
 
     // TODO: ADD THETA2
 
@@ -281,27 +281,27 @@ function addClaw4(obj, x, y, z) {
 
     // creates a right tetrahedron
     const vertices = new Float32Array([
-        WCLAW/2, -HCLAW/2,  WCLAW/2,
-       -WCLAW/2, -HCLAW/2,  WCLAW/2,
-       -WCLAW/2,  HCLAW/2, -WCLAW/2,
+        W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
+       -W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
+       -W_CLAW/2,  H_CLAW/2, -W_CLAW/2,
 
-        WCLAW/2, -HCLAW/2,  WCLAW/2,
-        WCLAW/2, -HCLAW/2, -WCLAW/2,
-       -WCLAW/2,  HCLAW/2, -WCLAW/2,
+        W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
+        W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
+       -W_CLAW/2,  H_CLAW/2, -W_CLAW/2,
 
-        WCLAW/2, -HCLAW/2,  WCLAW/2,
-        WCLAW/2, -HCLAW/2, -WCLAW/2,
-       -WCLAW/2, -HCLAW/2,  WCLAW/2,
+        W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
+        W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
+       -W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
 
-       -WCLAW/2, -HCLAW/2,  WCLAW/2,
-       -WCLAW/2,  HCLAW/2, -WCLAW/2,
-        WCLAW/2, -HCLAW/2, -WCLAW/2,
+       -W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
+       -W_CLAW/2,  H_CLAW/2, -W_CLAW/2,
+        W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
    ]);
 
     geometry.setAttribute('position', new THREE.BufferAttribute( vertices, 3 ) );
     mesh = new THREE.Mesh(geometry, materials[0]);
     mesh.rotation.z = Math.PI;
-    mesh.position.set(x + WBLOCK/2, y - HCLAW/2 - HBLOCK, z);
+    mesh.position.set(x + W_BLOCK/2, y - H_CLAW/2 - H_BLOCK, z);
 
     // TODO: ADD THETA2
 
@@ -311,9 +311,9 @@ function addClaw4(obj, x, y, z) {
 function addBlockAndClaw(obj, x, y, z) {
     'use strict';
 
-    geometry = new THREE.BoxGeometry(WBLOCK, HBLOCK, WBLOCK);
+    geometry = new THREE.BoxGeometry(W_BLOCK, H_BLOCK, W_BLOCK);
     mesh = new THREE.Mesh(geometry, materials[2]);
-    mesh.position.set(x, y - HBLOCK/2, z);
+    mesh.position.set(x, y - H_BLOCK/2, z);
     obj.add(mesh);
 
     addClaw1(obj, x, y, z);
@@ -322,24 +322,24 @@ function addBlockAndClaw(obj, x, y, z) {
     addClaw4(obj, x, y, z);
 }
 
-function addTrolley(obj, x, y, z) {
+function adD_TROLLEY(obj, x, y, z) {
     'use strict';
 
-    geometry = new THREE.BoxGeometry(WTROLLEY, HTROLLEY, WTROLLEY);
+    geometry = new THREE.BoxGeometry(W_TROLLEY, H_TROLLEY, W_TROLLEY);
     mesh = new THREE.Mesh(geometry, materials[2]);
     mesh.position.set(x, y, z);  // TODO: ADD DELTA1
     obj.add(mesh);
 
     addCable(obj, x, y, z);
-    addBlockAndClaw(obj, x, y - HCABLE - HTROLLEY/2, z);
+    addBlockAndClaw(obj, x, y - H_CABLE - H_TROLLEY/2, z);
 }
 
 function addCraneJib(obj, x, y, z) {
     'use strict';
 
-    geometry = new THREE.BoxGeometry(WTOWER, HJIBCJIB, LJIBCJIB);
+    geometry = new THREE.BoxGeometry(W_TOWER, H_JIB_CJIB, L_JIB_CJIB);
     mesh = new THREE.Mesh(geometry, materials[1]);
-    mesh.position.set(x, y, z + WTOWER/2 + LJIB/2 - LCJIB/2);
+    mesh.position.set(x, y, z + W_TOWER/2 + L_JIB/2 - L_CJIB/2);
     obj.add(mesh);
 
     addFrontPendant(obj, x, y, z);   // Tirante 1
@@ -348,7 +348,7 @@ function addCraneJib(obj, x, y, z) {
     addCounterWeight(obj, x, y, z);
 
     // TODO: ADD THETA1
-    addTrolley(obj, x, y - HJIBCJIB/2, z + DTROLLEY + WTOWER/2 + WTROLLEY/2);
+    adD_TROLLEY(obj, x, y - H_JIB_CJIB/2, z + D_TROLLEY + W_TOWER/2 + W_TROLLEY/2);
 }
 
 function createCrane(x, y, z) {
@@ -358,7 +358,7 @@ function createCrane(x, y, z) {
 
     addCraneBase(crane, 0, 0, 0);
     addCraneTower(crane, 0, 0, 0);
-    addCraneJib(crane, 0, HBASE + 0.9 * HTOWER + HJIBCJIB/2, 0);
+    addCraneJib(crane, 0, H_BASE + 0.9 * H_TOWER + H_JIB_CJIB/2, 0);
 
     scene.add(crane);
 
