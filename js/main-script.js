@@ -12,9 +12,12 @@ var camera, camera1, camera2, camera3, camera4, camera5, camera6, scene, rendere
 
 var materials = [new THREE.MeshBasicMaterial({ color: 0xbbbbbb, wireframe: true }),
                  new THREE.MeshBasicMaterial({ color: 0xffdd00, wireframe: true }),
-                 new THREE.MeshBasicMaterial({ color: 0xffaa00, wireframe: true})]
+                 new THREE.MeshBasicMaterial({ color: 0xffaa00, wireframe: true }),
+                 new THREE.MeshBasicMaterial({ color: 0x4d4dff, wireframe: true })]
 
 var geometry, mesh;
+
+var crane, jib, block, trolley;
 
 ///////////////
 /* CONSTANTS */
@@ -60,6 +63,11 @@ const H_BLOCK = 4;
 const W_CLAW = 8;
 const H_CLAW = 10;
 
+const MAX_THETA1 = Math.PI;
+
+const W_CONTAINER = 50;
+const L_CONTAINER = 80;
+
 /////////////////////
 /* CREATE SCENE(S) */
 /////////////////////
@@ -70,7 +78,8 @@ function createScene() {
 
     scene.add(new THREE.AxesHelper(100));
 
-    createCrane(0, 0, 0);
+    createCrane(scene, 0, 0, 0);
+    createContainer(0, 0, 0);
 }
 
 //////////////////////
@@ -166,9 +175,10 @@ function addCabin(obj, x, y, z) {
 function addCounterWeight(obj, x, y, z) {
     'use strict';
 
-    geometry = new THREE.BoxGeometry(W_CWEIGHT, H_CWEIGHT, W_CWEIGHT);
+    geometry = new THREE.BufferGeometry(
+        W_CWEIGHT, H_CWEIGHT, W_CWEIGHT);
     mesh = new THREE.Mesh(geometry, materials[2]);
-    mesh.position.set(x, y + H_JIB_CJIB/2 - H_CWEIGHT/2, z - W_TOWER/2 - L_CWEIGHT - D_CWEIGHT);
+    mesh.position.set(x, y + H_JIB_CJIB/2 - H_CWEIGHT/2 + 2, z - W_TOWER/2 - L_CWEIGHT - D_CWEIGHT);
     obj.add(mesh);
 }
 
@@ -214,7 +224,8 @@ function addClaw(obj, x, y, z, rot) {
 function createBlockAndClaw(obj, x, y, z) {
     'use strict';
 
-    var block = new THREE.Object3D();
+    block = new THREE.Object3D();
+    block.userData = { movingDown: false, movingUp: false, closing: false, opening: false, step: 0.1 }
 
     block.position.x = x;
     block.position.y = y;
@@ -224,8 +235,8 @@ function createBlockAndClaw(obj, x, y, z) {
 
     geometry = new THREE.BoxGeometry(W_BLOCK, H_BLOCK, W_BLOCK);
     mesh = new THREE.Mesh(geometry, materials[2]);
-    mesh.position.set(x, y - H_BLOCK/2, z);
-    obj.add(mesh);
+    mesh.position.set(0, - H_BLOCK/2, 0);
+    block.add(mesh);
 
     addClaw(block,      0    , -H_CLAW/2 - H_BLOCK, -W_BLOCK/2,  0);
     addClaw(block,      0    , -H_CLAW/2 - H_BLOCK,  W_BLOCK/2,  Math.PI);
@@ -236,7 +247,8 @@ function createBlockAndClaw(obj, x, y, z) {
 function createTrolley(obj, x, y, z) {
     'use strict';
 
-    var trolley = new THREE.Object3D();
+    trolley = new THREE.Object3D();
+    trolley.userData = { movingForward: false, movingBackwards: false, step: 0.1 };
 
     trolley.position.x = x;
     trolley.position.y = y;
@@ -246,19 +258,20 @@ function createTrolley(obj, x, y, z) {
 
     geometry = new THREE.BoxGeometry(W_TROLLEY, H_TROLLEY, W_TROLLEY);
     mesh = new THREE.Mesh(geometry, materials[2]);
-    mesh.position.set(x, y, z);  // TODO: ADD DELTA1
-    obj.add(mesh);
+    mesh.position.set(0, 0, 0);  // TODO: ADD DELTA1
+    trolley.add(mesh);
 
     addCable(trolley, 0, 0, 0);
     createBlockAndClaw(trolley, 0, - H_CABLE - H_TROLLEY/2, 0);
 }
 
-function createCraneJib(obj, x, y, z) {
+function createCraneJib(x, y, z) {
     'use strict';
     
-    var jib = new THREE.Object3D();
+    jib = new THREE.Object3D();
+    jib.userData = { rotatingRight: false, rotatingLeft: false, step: 0.01 };
 
-    obj.add(jib);
+    scene.add(jib);
 
     jib.position.x = x;
     jib.position.y = y;
@@ -266,8 +279,8 @@ function createCraneJib(obj, x, y, z) {
 
     geometry = new THREE.BoxGeometry(W_TOWER, H_JIB_CJIB, L_JIB_CJIB);
     mesh = new THREE.Mesh(geometry, materials[1]);
-    mesh.position.set(x, y, z + W_TOWER/2 + L_JIB/2 - L_CJIB/2);
-    obj.add(mesh);
+    mesh.position.set(0, 0, W_TOWER/2 + L_JIB/2 - L_CJIB/2);
+    jib.add(mesh);
 
     addFrontPendant(jib, 0, 0, 0);   // Tirante 1
     addRearPendant(jib, 0, 0, 0);    // Tirante 2
@@ -278,21 +291,56 @@ function createCraneJib(obj, x, y, z) {
     createTrolley(jib, 0, - H_JIB_CJIB/2, D_TROLLEY + W_TOWER/2 + W_TROLLEY/2);
 }
 
-function createCrane(x, y, z) {
+function createCrane() {
     'use strict';
 
-    var crane = new THREE.Object3D();
+    addCraneBase(scene, 0, 0, 0);
+    addCraneTower(scene, 0, 0, 0);
 
-    addCraneBase(crane, 0, 0, 0);
-    addCraneTower(crane, 0, 0, 0);
+    createCraneJib(0, H_BASE + 0.9 * H_TOWER + H_JIB_CJIB/2, 0);
+}
 
-    scene.add(crane);
+function createContainer() {
+    'use strict';
 
-    crane.position.x = x;
-    crane.position.y = y;
-    crane.position.z = z;
+    geometry = new THREE.BufferGeometry();
 
-    createCraneJib(crane, 0, H_BASE + 0.9 * H_TOWER + H_JIB_CJIB/2, 0);
+    const vertices = new Float32Array([
+        0          , 0          , 0,
+        L_CONTAINER, 0          , 0,
+        L_CONTAINER, W_CONTAINER, 0,
+        0          , W_CONTAINER, 0,
+        0          , 0          , W_CONTAINER,
+        L_CONTAINER, 0          , W_CONTAINER,
+        L_CONTAINER, W_CONTAINER, W_CONTAINER,
+        0          , W_CONTAINER, W_CONTAINER
+    ]);
+    
+    // indices for open container
+    const indices = [
+        // bottom face
+    0, 1, 2,
+    0, 2, 3,
+    0, 4, 1,
+    1, 4, 5,
+    3, 7, 2,
+    2, 7, 6,
+    4, 5, 6,
+    4, 6, 7,
+    1, 5, 2,
+    5, 6, 2
+    // sides
+ 
+    ];
+
+    geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+    geometry.setIndex(indices);
+
+
+    mesh = new THREE.Mesh(geometry, materials[3]);
+    mesh.position.set(200, W_CONTAINER/2, 100);
+    scene.add(mesh);
+
 }
 
 //////////////////////
@@ -351,6 +399,8 @@ function init() {
 
 
     window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("resize", onResize);
 
     render();
 }
@@ -360,6 +410,29 @@ function init() {
 /////////////////////
 function animate() {
     'use strict';
+
+    if (jib.userData.rotatingRight)
+        jib.rotation.y += jib.userData.step;
+    if (jib.userData.rotatingLeft)
+        jib.rotation.y -= jib.userData.step;
+
+    if (trolley.userData.movingForward)
+        trolley.position.z += trolley.userData.step;
+    if (trolley.userData.movingBackwards)
+        trolley.position.z -= trolley.userData.step;
+
+    if (block.userData.movingDown)
+        block.position.y -= block.userData.step;
+    if (block.userData.movingUp)
+        block.position.y += block.userData.step;
+
+    if (block.userData.opening) {
+        // TODO
+    }
+    if (block.userData.closing) {
+        // TODO
+    }
+    
     render();
 
     requestAnimationFrame(animate);
@@ -368,8 +441,15 @@ function animate() {
 ////////////////////////////
 /* RESIZE WINDOW CALLBACK */
 ////////////////////////////
-function onResize() { 
+function onResize() {
     'use strict';
+
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    if (window.innerHeight > 0 && window.innerWidth > 0) {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+    }
 
 }
 
@@ -402,6 +482,38 @@ function onKeyDown(e) {
         for (let i = 0; i < materials.length; i++)
             materials[i].wireframe = !materials[i].wireframe;   
         break;
+    case 81: //Q
+    case 113://q
+        jib.userData.rotatingLeft = true;
+        break;
+    case 65: //A
+    case 97: //a
+        jib.userData.rotatingRight = true;
+        break;
+    case 87: //W
+    case 119://w
+        trolley.userData.movingBackwards = true;
+        break;
+    case 83: //S
+    case 115://s
+        trolley.userData.movingForward = true;
+        break;
+    case 69: //D
+    case 101://d
+        block.userData.movingDown = true;
+        break;
+    case 68: //E
+    case 100://e
+        block.userData.movingUp = true;
+        break;
+    case 82: //R
+    case 114://r
+        block.userData.opening = true;
+        break;
+    case 70: //F
+    case 102://f
+        block.userData.closing = true;
+        break;
     }
 }
 
@@ -410,6 +522,42 @@ function onKeyDown(e) {
 ///////////////////////
 function onKeyUp(e){
     'use strict';
+
+    switch (e.keyCode) {
+    case 65: //A
+    case 97: //a
+        jib.userData.rotatingRight = false;
+        break;
+    case 81: //Q
+    case 113://q
+        jib.userData.rotatingLeft = false;
+        break;
+    case 87: //W
+    case 119://w
+        trolley.userData.movingBackwards = false;
+        break;
+    case 83: //S
+    case 115://s
+        trolley.userData.movingForward = false;
+        break;
+    case 69: //D
+    case 101://d
+        block.userData.movingDown = false;
+        break;
+    case 68: //E
+    case 100://e
+        block.userData.movingUp = false;
+        break;
+    case 82: //R
+    case 114://r
+        block.userData.opening = false;
+        break;
+    case 70: //F
+    case 102://f
+        block.userData.closing = false;
+        break;
+    }
+
 }
 
 init();
