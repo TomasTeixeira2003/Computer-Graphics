@@ -42,12 +42,12 @@ const W_CABIN = 10;
 const H_CABIN = 15;
 const L_CABIN = 20;
 
-const W_CWEIGHT = 10;
+const W_CWEIGHT = 12;
 const H_CWEIGHT = 20;
 const L_CWEIGHT = 10;
 const D_CWEIGHT = 25;
 
-const W_TROLLEY = 10;
+const W_TROLLEY = 12;
 const H_TROLLEY = 5;
 const D_TROLLEY = 80;
 
@@ -308,47 +308,71 @@ function addClaw4(obj, x, y, z) {
     obj.add(mesh);
 }
 
-function addBlockAndClaw(obj, x, y, z) {
+function createBlockAndClaw(x, y, z) {
     'use strict';
+
+    var block = new THREE.Object3D();
+
+    block.position.x = x;
+    block.position.y = y;
+    block.position.z = z;
+
+    scene.add(block);
 
     geometry = new THREE.BoxGeometry(W_BLOCK, H_BLOCK, W_BLOCK);
     mesh = new THREE.Mesh(geometry, materials[2]);
-    mesh.position.set(x, y - H_BLOCK/2, z);
-    obj.add(mesh);
+    mesh.position.set(0, -H_BLOCK/2, 0);
+    block.add(mesh);
 
-    addClaw1(obj, x, y, z);
-    addClaw2(obj, x, y, z);
-    addClaw3(obj, x, y, z);
-    addClaw4(obj, x, y, z);
+    addClaw1(block, 0, 0, 0);
+    addClaw2(block, 0, 0, 0);
+    addClaw3(block, 0, 0, 0);
+    addClaw4(block, 0, 0, 0);
 }
 
-function adD_TROLLEY(obj, x, y, z) {
+function createTrolley(x, y, z) {
     'use strict';
+
+    var trolley = new THREE.Object3D();
+
+    trolley.position.x = x;
+    trolley.position.y = y;
+    trolley.position.z = z;
+
+    scene.add(trolley);
 
     geometry = new THREE.BoxGeometry(W_TROLLEY, H_TROLLEY, W_TROLLEY);
     mesh = new THREE.Mesh(geometry, materials[2]);
-    mesh.position.set(x, y, z);  // TODO: ADD DELTA1
-    obj.add(mesh);
+    mesh.position.set(0, 0, 0);  // TODO: ADD DELTA1
+    trolley.add(mesh);
 
-    addCable(obj, x, y, z);
-    addBlockAndClaw(obj, x, y - H_CABLE - H_TROLLEY/2, z);
+    addCable(trolley, 0, 0, 0);
+    createBlockAndClaw(x, y - H_CABLE - H_TROLLEY/2, z);
 }
 
-function addCraneJib(obj, x, y, z) {
+function createCraneJib(x, y, z) {
     'use strict';
+    
+    var jib = new THREE.Object3D();
+
+    scene.add(jib);
+
+    jib.position.x = x;
+    jib.position.y = y;
+    jib.position.z = z;
 
     geometry = new THREE.BoxGeometry(W_TOWER, H_JIB_CJIB, L_JIB_CJIB);
     mesh = new THREE.Mesh(geometry, materials[1]);
-    mesh.position.set(x, y, z + W_TOWER/2 + L_JIB/2 - L_CJIB/2);
-    obj.add(mesh);
+    mesh.position.set(0, 0, W_TOWER/2 + L_JIB/2 - L_CJIB/2);
+    jib.add(mesh);
 
-    addFrontPendant(obj, x, y, z);   // Tirante 1
-    addRearPendant(obj, x, y, z);    // Tirante 2
-    addCabin(obj, x, y, z);
-    addCounterWeight(obj, x, y, z);
+    addFrontPendant(jib, 0, 0, 0);   // Tirante 1
+    addRearPendant(jib, 0, 0, 0);    // Tirante 2
+    addCabin(jib, 0, 0, 0);
+    addCounterWeight(jib, 0, 0, 0);
 
     // TODO: ADD THETA1
-    adD_TROLLEY(obj, x, y - H_JIB_CJIB/2, z + D_TROLLEY + W_TOWER/2 + W_TROLLEY/2);
+    createTrolley(x, y - H_JIB_CJIB/2, z + D_TROLLEY + W_TOWER/2 + W_TROLLEY/2);
 }
 
 function createCrane(x, y, z) {
@@ -358,13 +382,14 @@ function createCrane(x, y, z) {
 
     addCraneBase(crane, 0, 0, 0);
     addCraneTower(crane, 0, 0, 0);
-    addCraneJib(crane, 0, H_BASE + 0.9 * H_TOWER + H_JIB_CJIB/2, 0);
 
     scene.add(crane);
 
     crane.position.x = x;
     crane.position.y = y;
     crane.position.z = z;
+
+    createCraneJib(0, H_BASE + 0.9 * H_TOWER + H_JIB_CJIB/2, 0);
 }
 
 //////////////////////
