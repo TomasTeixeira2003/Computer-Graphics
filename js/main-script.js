@@ -179,136 +179,39 @@ function addCable(obj, x, y, z) {
     obj.add(mesh);
 }
 
-function addClaw1(obj, x, y, z) {
+function addClaw(obj, x, y, z, rot) {
     const geometry = new THREE.BufferGeometry();
 
-    // creates a right tetrahedron
+    // creates a tetrahedron
     const vertices = new Float32Array([
         -W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
          W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
-        -W_CLAW/2,  H_CLAW/2, -W_CLAW/2,
-
-        -W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
         -W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
         -W_CLAW/2,  H_CLAW/2, -W_CLAW/2,
-
-        -W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
-        -W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
-         W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
-
-         W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
-        -W_CLAW/2,  H_CLAW/2, -W_CLAW/2,
-        -W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
     ]);
 
-    geometry.setAttribute('position', new THREE.BufferAttribute( vertices, 3 ) );
+    // indices for tetrahedron
+    const indices = [
+        0, 1, 2,
+        0, 2, 3,
+        0, 3, 1,
+        1, 3, 2
+    ];
+
+    geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+    geometry.setIndex(indices);
 
     mesh = new THREE.Mesh(geometry, materials[0]);
+    mesh.rotation.y = rot + Math.PI/4;
     mesh.rotation.z = Math.PI;
-    mesh.position.set(x, y - H_CLAW/2 - H_BLOCK, z - W_BLOCK/2);
+    mesh.position.set(x, y, z);
 
     // TODO: ADD THETA2
 
     obj.add(mesh);
 }
 
-function addClaw2(obj, x, y, z) {
-    const geometry = new THREE.BufferGeometry();
-
-    // creates a right tetrahedron
-    const vertices = new Float32Array([
-        -W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
-         W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
-         W_CLAW/2,  H_CLAW/2, -W_CLAW/2,
-
-        -W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
-        -W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
-         W_CLAW/2,  H_CLAW/2, -W_CLAW/2,
-
-        -W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
-        -W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
-         W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
-
-         W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
-         W_CLAW/2,  H_CLAW/2, -W_CLAW/2,
-        -W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
-    ]);
-
-    geometry.setAttribute('position', new THREE.BufferAttribute( vertices, 3 ) );
-    mesh = new THREE.Mesh(geometry, materials[0]);
-    mesh.rotation.z = Math.PI;
-    mesh.position.set(x, y - H_CLAW/2 - H_BLOCK, z + W_BLOCK/2);
-
-    // TODO: ADD THETA2
-
-    obj.add(mesh);
-}
-
-function addClaw3(obj, x, y, z) {
-    const geometry = new THREE.BufferGeometry();
-
-    // creates a right tetrahedron
-    const vertices = new Float32Array([
-         W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
-        -W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
-         W_CLAW/2,  H_CLAW/2,  W_CLAW/2,
-
-         W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
-         W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
-         W_CLAW/2,  H_CLAW/2,  W_CLAW/2,
-
-         W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
-         W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
-        -W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
-
-        -W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
-         W_CLAW/2,  H_CLAW/2,  W_CLAW/2,
-         W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
-    ]);
-
-    geometry.setAttribute('position', new THREE.BufferAttribute( vertices, 3 ) );
-    mesh = new THREE.Mesh(geometry, materials[0]);
-    mesh.rotation.z = Math.PI;
-    mesh.position.set(x - W_BLOCK/2, y - H_CLAW/2 - H_BLOCK, z);
-
-    // TODO: ADD THETA2
-
-    obj.add(mesh);
-}
-
-function addClaw4(obj, x, y, z) {
-    const geometry = new THREE.BufferGeometry();
-
-    // creates a right tetrahedron
-    const vertices = new Float32Array([
-        W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
-       -W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
-       -W_CLAW/2,  H_CLAW/2, -W_CLAW/2,
-
-        W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
-        W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
-       -W_CLAW/2,  H_CLAW/2, -W_CLAW/2,
-
-        W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
-        W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
-       -W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
-
-       -W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
-       -W_CLAW/2,  H_CLAW/2, -W_CLAW/2,
-        W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
-   ]);
-
-    geometry.setAttribute('position', new THREE.BufferAttribute( vertices, 3 ) );
-    mesh = new THREE.Mesh(geometry, materials[0]);
-    mesh.rotation.z = Math.PI;
-    mesh.position.set(x + W_BLOCK/2, y - H_CLAW/2 - H_BLOCK, z);
-
-    // TODO: ADD THETA2
-
-    obj.add(mesh);
-}
-
-function createBlockAndClaw(x, y, z) {
+function createBlockAndClaw(obj, x, y, z) {
     'use strict';
 
     var block = new THREE.Object3D();
@@ -317,20 +220,20 @@ function createBlockAndClaw(x, y, z) {
     block.position.y = y;
     block.position.z = z;
 
-    scene.add(block);
+    obj.add(block);
 
     geometry = new THREE.BoxGeometry(W_BLOCK, H_BLOCK, W_BLOCK);
     mesh = new THREE.Mesh(geometry, materials[2]);
-    mesh.position.set(0, -H_BLOCK/2, 0);
-    block.add(mesh);
+    mesh.position.set(x, y - H_BLOCK/2, z);
+    obj.add(mesh);
 
-    addClaw1(block, 0, 0, 0);
-    addClaw2(block, 0, 0, 0);
-    addClaw3(block, 0, 0, 0);
-    addClaw4(block, 0, 0, 0);
+    addClaw(block,      0    , -H_CLAW/2 - H_BLOCK, -W_BLOCK/2,  0);
+    addClaw(block,      0    , -H_CLAW/2 - H_BLOCK,  W_BLOCK/2,  Math.PI);
+    addClaw(block, -W_BLOCK/2, -H_CLAW/2 - H_BLOCK,      0    ,  Math.PI/2);
+    addClaw(block,  W_BLOCK/2, -H_CLAW/2 - H_BLOCK,      0    , 3*Math.PI/2);
 }
 
-function createTrolley(x, y, z) {
+function createTrolley(obj, x, y, z) {
     'use strict';
 
     var trolley = new THREE.Object3D();
@@ -339,23 +242,23 @@ function createTrolley(x, y, z) {
     trolley.position.y = y;
     trolley.position.z = z;
 
-    scene.add(trolley);
+    obj.add(trolley);
 
     geometry = new THREE.BoxGeometry(W_TROLLEY, H_TROLLEY, W_TROLLEY);
     mesh = new THREE.Mesh(geometry, materials[2]);
-    mesh.position.set(0, 0, 0);  // TODO: ADD DELTA1
-    trolley.add(mesh);
+    mesh.position.set(x, y, z);  // TODO: ADD DELTA1
+    obj.add(mesh);
 
     addCable(trolley, 0, 0, 0);
-    createBlockAndClaw(x, y - H_CABLE - H_TROLLEY/2, z);
+    createBlockAndClaw(trolley, 0, - H_CABLE - H_TROLLEY/2, 0);
 }
 
-function createCraneJib(x, y, z) {
+function createCraneJib(obj, x, y, z) {
     'use strict';
     
     var jib = new THREE.Object3D();
 
-    scene.add(jib);
+    obj.add(jib);
 
     jib.position.x = x;
     jib.position.y = y;
@@ -363,8 +266,8 @@ function createCraneJib(x, y, z) {
 
     geometry = new THREE.BoxGeometry(W_TOWER, H_JIB_CJIB, L_JIB_CJIB);
     mesh = new THREE.Mesh(geometry, materials[1]);
-    mesh.position.set(0, 0, W_TOWER/2 + L_JIB/2 - L_CJIB/2);
-    jib.add(mesh);
+    mesh.position.set(x, y, z + W_TOWER/2 + L_JIB/2 - L_CJIB/2);
+    obj.add(mesh);
 
     addFrontPendant(jib, 0, 0, 0);   // Tirante 1
     addRearPendant(jib, 0, 0, 0);    // Tirante 2
@@ -372,7 +275,7 @@ function createCraneJib(x, y, z) {
     addCounterWeight(jib, 0, 0, 0);
 
     // TODO: ADD THETA1
-    createTrolley(x, y - H_JIB_CJIB/2, z + D_TROLLEY + W_TOWER/2 + W_TROLLEY/2);
+    createTrolley(jib, 0, - H_JIB_CJIB/2, D_TROLLEY + W_TOWER/2 + W_TROLLEY/2);
 }
 
 function createCrane(x, y, z) {
@@ -389,7 +292,7 @@ function createCrane(x, y, z) {
     crane.position.y = y;
     crane.position.z = z;
 
-    createCraneJib(0, H_BASE + 0.9 * H_TOWER + H_JIB_CJIB/2, 0);
+    createCraneJib(crane, 0, H_BASE + 0.9 * H_TOWER + H_JIB_CJIB/2, 0);
 }
 
 //////////////////////
