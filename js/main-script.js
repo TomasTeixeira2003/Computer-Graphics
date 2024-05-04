@@ -17,7 +17,9 @@ var materials = [new THREE.MeshBasicMaterial({ color: 0xbbbbbb, wireframe: true 
 
 var geometry, mesh;
 
-var crane, jib, block, trolley;
+var jib, block, trolley;
+
+var cable_y_offset = 0;
 
 ///////////////
 /* CONSTANTS */
@@ -67,6 +69,8 @@ const MAX_THETA1 = Math.PI;
 
 const W_CONTAINER = 50;
 const L_CONTAINER = 80;
+
+const CABLE_INDEX = 1;          // used while performing cable animation
 
 /////////////////////
 /* CREATE SCENE(S) */
@@ -175,8 +179,7 @@ function addCabin(obj, x, y, z) {
 function addCounterWeight(obj, x, y, z) {
     'use strict';
 
-    geometry = new THREE.BufferGeometry(
-        W_CWEIGHT, H_CWEIGHT, W_CWEIGHT);
+    geometry = new THREE.BoxGeometry(W_CWEIGHT, H_CWEIGHT, W_CWEIGHT);
     mesh = new THREE.Mesh(geometry, materials[2]);
     mesh.position.set(x, y + H_JIB_CJIB/2 - H_CWEIGHT/2 + 2, z - W_TOWER/2 - L_CWEIGHT - D_CWEIGHT);
     obj.add(mesh);
@@ -258,7 +261,7 @@ function createTrolley(obj, x, y, z) {
 
     geometry = new THREE.BoxGeometry(W_TROLLEY, H_TROLLEY, W_TROLLEY);
     mesh = new THREE.Mesh(geometry, materials[2]);
-    mesh.position.set(0, 0, 0);  // TODO: ADD DELTA1
+    mesh.position.set(0, 0, 0);
     trolley.add(mesh);
 
     addCable(trolley, 0, 0, 0);
@@ -287,7 +290,6 @@ function createCraneJib(x, y, z) {
     addCabin(jib, 0, 0, 0);
     addCounterWeight(jib, 0, 0, 0);
 
-    // TODO: ADD THETA1
     createTrolley(jib, 0, - H_JIB_CJIB/2, D_TROLLEY + W_TOWER/2 + W_TROLLEY/2);
 }
 
@@ -413,18 +415,29 @@ function animate() {
 
     if (jib.userData.rotatingRight)
         jib.rotation.y += jib.userData.step;
+
     if (jib.userData.rotatingLeft)
         jib.rotation.y -= jib.userData.step;
 
     if (trolley.userData.movingForward)
         trolley.position.z += trolley.userData.step;
+
     if (trolley.userData.movingBackwards)
         trolley.position.z -= trolley.userData.step;
 
-    if (block.userData.movingDown)
+    if (block.userData.movingDown) {
         block.position.y -= block.userData.step;
-    if (block.userData.movingUp)
+        cable_y_offset -= block.userData.step;
+        trolley.children[CABLE_INDEX].position.set(0, -(H_CABLE - cable_y_offset)/2 - H_TROLLEY/2, 0);
+        trolley.children[CABLE_INDEX].scale.y += block.userData.step / H_CABLE;
+    }
+
+    if (block.userData.movingUp) {
         block.position.y += block.userData.step;
+        cable_y_offset += block.userData.step;
+        trolley.children[CABLE_INDEX].position.set(0, -(H_CABLE - cable_y_offset)/2 - H_TROLLEY/2, 0);
+        trolley.children[CABLE_INDEX].scale.y -= block.userData.step / H_CABLE;
+    }
 
     if (block.userData.opening) {
         // TODO
