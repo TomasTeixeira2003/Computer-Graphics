@@ -66,6 +66,12 @@ const W_CLAW = 8;
 const H_CLAW = 10;
 
 const MAX_THETA1 = Math.PI;
+const MIN_THETA1 = - Math.PI;
+const MAX_DELTA1 = L_JIB;
+const MIN_DELTA1 = 3 * W_TROLLEY/2 + W_BASE/2;
+const MAX_DELTA2 = - H_TROLLEY;
+const MIN_DELTA2 = - (0.9 * H_TOWER + H_JIB_CJIB/2 - H_TROLLEY - Math.sqrt(Math.pow(H_CLAW, 2) + Math.pow(W_CLAW/2, 2)));
+const ONE_DEGREE = Math.PI / 180;
 
 const W_CONTAINER = 50;
 const L_CONTAINER = 80;
@@ -228,7 +234,7 @@ function createBlockAndClaw(obj, x, y, z) {
     'use strict';
 
     block = new THREE.Object3D();
-    block.userData = { movingDown: false, movingUp: false, closing: false, opening: false, step: 0.1 }
+    block.userData = { movingDown: false, movingUp: false, closing: false, opening: false, movStep: 0.1, rotStep: ONE_DEGREE }
 
     block.position.x = x;
     block.position.y = y;
@@ -272,7 +278,7 @@ function createCraneJib(x, y, z) {
     'use strict';
     
     jib = new THREE.Object3D();
-    jib.userData = { rotatingRight: false, rotatingLeft: false, step: 0.01 };
+    jib.userData = { rotatingRight: false, rotatingLeft: false, step: ONE_DEGREE };
 
     scene.add(jib);
 
@@ -413,37 +419,49 @@ function init() {
 function animate() {
     'use strict';
 
-    if (jib.userData.rotatingRight)
+    if (jib.userData.rotatingRight && jib.rotation.y <= MAX_THETA1)
         jib.rotation.y += jib.userData.step;
-
-    if (jib.userData.rotatingLeft)
+    if (jib.userData.rotatingLeft && jib.rotation.y >= MIN_THETA1)
         jib.rotation.y -= jib.userData.step;
 
-    if (trolley.userData.movingForward)
+    if (trolley.userData.movingForward && trolley.position.z <= MAX_DELTA1)
         trolley.position.z += trolley.userData.step;
-
-    if (trolley.userData.movingBackwards)
+    if (trolley.userData.movingBackwards && trolley.position.z >= MIN_DELTA1)
         trolley.position.z -= trolley.userData.step;
 
-    if (block.userData.movingDown) {
-        block.position.y -= block.userData.step;
-        cable_y_offset -= block.userData.step;
-        trolley.children[CABLE_INDEX].position.set(0, -(H_CABLE - cable_y_offset)/2 - H_TROLLEY/2, 0);
-        trolley.children[CABLE_INDEX].scale.y += block.userData.step / H_CABLE;
+    if (block.userData.movingDown && block.position.y >= MIN_DELTA2) {
+        block.position.y -= block.userData.movStep;
+        cable_y_offset -= block.userData.movStep;
+        trolley.children[CABLE_INDEX].position.y = -(H_CABLE - cable_y_offset)/2 - H_TROLLEY/2;
+        trolley.children[CABLE_INDEX].scale.y += block.userData.movStep / H_CABLE;
     }
 
-    if (block.userData.movingUp) {
-        block.position.y += block.userData.step;
-        cable_y_offset += block.userData.step;
-        trolley.children[CABLE_INDEX].position.set(0, -(H_CABLE - cable_y_offset)/2 - H_TROLLEY/2, 0);
-        trolley.children[CABLE_INDEX].scale.y -= block.userData.step / H_CABLE;
+    if (block.userData.movingUp && block.position.y <= MAX_DELTA2) {
+        block.position.y += block.userData.movStep;
+        cable_y_offset += block.userData.movStep;
+        trolley.children[CABLE_INDEX].position.y = -(H_CABLE - cable_y_offset)/2 - H_TROLLEY/2;
+        trolley.children[CABLE_INDEX].scale.y -= block.userData.movStep / H_CABLE;
     }
 
     if (block.userData.opening) {
-        // TODO
+        //block.children[1].rotation.x += block.userData.rotStep;
+        //block.children[1].position.z += W_BLOCK/2 * (1 - Math.cos(block.userData.rotStep));
+        //block.children[1].position.y -= Math.sqrt(32) * Math.sin(block.userData.rotStep);
+        //block.children[2].rotation.x -= block.userData.rotStep;
+        //block.children[3].rotation.z -= block.userData.rotStep;
+        //block.children[4].rotation.z += block.userData.rotStep;
     }
     if (block.userData.closing) {
-        // TODO
+        //console.log("rotation.x",block.children[1].rotation.x);
+        //console.log(block.children[1].position.z);
+        //console.log(block.children[1].position.y);
+        //block.children[1].rotation.x -= block.userData.rotStep;
+        //block.children[1].position.z -= W_BLOCK/2 * (1 - Math.cos(block.userData.rotStep));
+        //block.children[1].position.y += Math.sqrt(32) * Math.sin(block.userData.rotStep);
+        //block.children[2].rotation.x += block.userData.rotStep;
+
+        //block.children[3].rotation.z += block.userData.rotStep;
+        //block.children[4].rotation.z -= block.userData.rotStep;
     }
     
     render();
