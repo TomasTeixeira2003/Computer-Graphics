@@ -73,8 +73,17 @@ const MAX_DELTA2 = - H_TROLLEY;
 const MIN_DELTA2 = - (0.9 * H_TOWER + H_JIB_CJIB/2 - H_TROLLEY - Math.sqrt(Math.pow(H_CLAW, 2) + Math.pow(W_CLAW/2, 2)));
 const ONE_DEGREE = Math.PI / 180;
 
-const W_CONTAINER = 50;
-const L_CONTAINER = 80;
+const W_CONTAINER_BASE = 50;
+const H_CONTAINER_BASE = 5;
+const L_CONTAINER_BASE = 80;
+
+const W_CONTAINER_SIDE = H_CONTAINER_BASE;
+const H_CONTAINER_SIDE = W_CONTAINER_BASE;
+const L_CONTAINER_SIDE = L_CONTAINER_BASE;
+
+const W_CONTAINER_FRONT = W_CONTAINER_BASE;
+const H_CONTAINER_FRONT = W_CONTAINER_BASE;
+const L_CONTAINER_FRONT = H_CONTAINER_BASE;
 
 const CABLE_INDEX = 1;          // used while performing cable animation
 
@@ -199,29 +208,10 @@ function addCable(obj, x, y, z) {
 }
 
 function addClaw(obj, x, y, z, rot) {
-    const geometry = new THREE.BufferGeometry();
-
-    // creates a tetrahedron
-    const vertices = new Float32Array([
-        -W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
-         W_CLAW/2, -H_CLAW/2, -W_CLAW/2,
-        -W_CLAW/2, -H_CLAW/2,  W_CLAW/2,
-        -W_CLAW/2,  H_CLAW/2, -W_CLAW/2,
-    ]);
-
-    // indices for tetrahedron
-    const indices = [
-        0, 1, 2,
-        0, 2, 3,
-        0, 3, 1,
-        1, 3, 2
-    ];
-
-    geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-    geometry.setIndex(indices);
+    const geometry = new THREE.ConeGeometry(W_CLAW/2, H_CLAW, 3);
 
     mesh = new THREE.Mesh(geometry, materials[0]);
-    mesh.rotation.y = rot + Math.PI/4;
+    mesh.rotation.y = rot + Math.PI;
     mesh.rotation.z = Math.PI;
     mesh.position.set(x, y, z);
 
@@ -311,44 +301,35 @@ function createCrane() {
 function createContainer() {
     'use strict';
 
-    geometry = new THREE.BufferGeometry();
-
-    const vertices = new Float32Array([
-        0          , 0          , 0,
-        L_CONTAINER, 0          , 0,
-        L_CONTAINER, W_CONTAINER, 0,
-        0          , W_CONTAINER, 0,
-        0          , 0          , W_CONTAINER,
-        L_CONTAINER, 0          , W_CONTAINER,
-        L_CONTAINER, W_CONTAINER, W_CONTAINER,
-        0          , W_CONTAINER, W_CONTAINER
-    ]);
-    
-    // indices for open container
-    const indices = [
-        // bottom face
-    0, 1, 2,
-    0, 2, 3,
-    0, 4, 1,
-    1, 4, 5,
-    3, 7, 2,
-    2, 7, 6,
-    4, 5, 6,
-    4, 6, 7,
-    1, 5, 2,
-    5, 6, 2
-    // sides
- 
-    ];
-
-    geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-    geometry.setIndex(indices);
-
-
+    // base
+    geometry = new THREE.BoxGeometry(W_CONTAINER_BASE, H_CONTAINER_BASE, L_CONTAINER_BASE);
     mesh = new THREE.Mesh(geometry, materials[3]);
-    mesh.position.set(200, W_CONTAINER/2, 100);
+    mesh.position.set(200, H_CONTAINER_BASE/2, 100);
     scene.add(mesh);
 
+    // left-side
+    geometry = new THREE.BoxGeometry(W_CONTAINER_SIDE, H_CONTAINER_SIDE, L_CONTAINER_SIDE);
+    mesh = new THREE.Mesh(geometry, materials[3]);
+    mesh.position.set(200 - W_CONTAINER_BASE/2, H_CONTAINER_SIDE/2, 100);
+    scene.add(mesh);
+
+    // right-side
+    geometry = new THREE.BoxGeometry(W_CONTAINER_SIDE, H_CONTAINER_SIDE, L_CONTAINER_SIDE);
+    mesh = new THREE.Mesh(geometry, materials[3]);
+    mesh.position.set(200 + W_CONTAINER_BASE/2, H_CONTAINER_SIDE/2, 100);
+    scene.add(mesh);
+
+    // front
+    geometry = new THREE.BoxGeometry(W_CONTAINER_FRONT, H_CONTAINER_FRONT, L_CONTAINER_FRONT);
+    mesh = new THREE.Mesh(geometry, materials[3]);
+    mesh.position.set(200, W_CONTAINER_BASE/2, 100 - L_CONTAINER_BASE/2);
+    scene.add(mesh);
+
+    // back
+    geometry = new THREE.BoxGeometry(W_CONTAINER_FRONT, H_CONTAINER_FRONT, L_CONTAINER_FRONT);
+    mesh = new THREE.Mesh(geometry, materials[3]);
+    mesh.position.set(200, W_CONTAINER_BASE/2, 100 + L_CONTAINER_BASE/2);
+    scene.add(mesh);
 }
 
 //////////////////////
