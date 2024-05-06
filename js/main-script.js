@@ -13,7 +13,12 @@ var camera, camera1, camera2, camera3, camera4, camera5, camera6, scene, rendere
 var materials = [new THREE.MeshBasicMaterial({ color: 0xbbbbbb, wireframe: true }),
                  new THREE.MeshBasicMaterial({ color: 0xffdd00, wireframe: true }),
                  new THREE.MeshBasicMaterial({ color: 0xffaa00, wireframe: true }),
-                 new THREE.MeshBasicMaterial({ color: 0x4d4dff, wireframe: true })]
+                 new THREE.MeshBasicMaterial({ color: 0x4d4dff, wireframe: true }),
+                 new THREE.MeshBasicMaterial({ color: 0xD2042D, wireframe: true }),
+                 new THREE.MeshBasicMaterial({ color: 0x991781, wireframe: true }),
+                 new THREE.MeshBasicMaterial({ color: 0x409917, wireframe: true }),
+                 new THREE.MeshBasicMaterial({ color: 0x179799, wireframe: true }),
+                 new THREE.MeshBasicMaterial({ color: 0xE918BB, wireframe: true })]
 
 var geometry, mesh;
 
@@ -93,6 +98,14 @@ const W_CONTAINER_FRONT = W_CONTAINER_BASE;
 const H_CONTAINER_FRONT = W_CONTAINER_BASE;
 const L_CONTAINER_FRONT = H_CONTAINER_BASE;
 
+const CUBE_SIDE = 15;
+const DODECAHEDRON_RADIUS = 10;
+const ICOSAHEDRON_RADIUS = 8;
+const TORUS_RADIUS = 10;
+const TORUS_TUBE = 2; 
+const TORUS_KNOT_RADIUS = 12;
+const TORUS_KNOT_TUBE = 2;
+
 const CABLE_INDEX = 1;          // used while performing cable animation
 
 /////////////////////
@@ -106,7 +119,8 @@ function createScene() {
     scene.add(new THREE.AxesHelper(100));
 
     createCrane(scene, 0, 0, 0);
-    createContainer(0, 0, 0);
+    createContainer();
+    createGrabbables();
 }
 
 //////////////////////
@@ -219,7 +233,7 @@ function addClaw(obj, x, y, z, rot) {
     const geometry = new THREE.ConeGeometry(W_CLAW/2, H_CLAW, 3);
 
     mesh = new THREE.Mesh(geometry, materials[0]);
-    mesh.rotation.y = rot + Math.PI;
+    mesh.rotation.y = rot;
     mesh.rotation.z = Math.PI;
     mesh.position.set(x, y, z);
 
@@ -314,31 +328,65 @@ function createContainer() {
     // base
     geometry = new THREE.BoxGeometry(W_CONTAINER_BASE, H_CONTAINER_BASE, L_CONTAINER_BASE);
     mesh = new THREE.Mesh(geometry, materials[3]);
-    mesh.position.set(200, H_CONTAINER_BASE/2, 100);
+    mesh.position.set(150, H_CONTAINER_BASE/2, 100);
     scene.add(mesh);
 
     // left-side
     geometry = new THREE.BoxGeometry(W_CONTAINER_SIDE, H_CONTAINER_SIDE, L_CONTAINER_SIDE);
     mesh = new THREE.Mesh(geometry, materials[3]);
-    mesh.position.set(200 - W_CONTAINER_BASE/2, H_CONTAINER_SIDE/2, 100);
+    mesh.position.set(150 - W_CONTAINER_BASE/2, H_CONTAINER_SIDE/2, 100);
     scene.add(mesh);
 
     // right-side
     geometry = new THREE.BoxGeometry(W_CONTAINER_SIDE, H_CONTAINER_SIDE, L_CONTAINER_SIDE);
     mesh = new THREE.Mesh(geometry, materials[3]);
-    mesh.position.set(200 + W_CONTAINER_BASE/2, H_CONTAINER_SIDE/2, 100);
+    mesh.position.set(150 + W_CONTAINER_BASE/2, H_CONTAINER_SIDE/2, 100);
     scene.add(mesh);
 
     // front
     geometry = new THREE.BoxGeometry(W_CONTAINER_FRONT, H_CONTAINER_FRONT, L_CONTAINER_FRONT);
     mesh = new THREE.Mesh(geometry, materials[3]);
-    mesh.position.set(200, W_CONTAINER_BASE/2, 100 - L_CONTAINER_BASE/2);
+    mesh.position.set(150, W_CONTAINER_BASE/2, 100 - L_CONTAINER_BASE/2);
     scene.add(mesh);
 
     // back
     geometry = new THREE.BoxGeometry(W_CONTAINER_FRONT, H_CONTAINER_FRONT, L_CONTAINER_FRONT);
     mesh = new THREE.Mesh(geometry, materials[3]);
-    mesh.position.set(200, W_CONTAINER_BASE/2, 100 + L_CONTAINER_BASE/2);
+    mesh.position.set(150, W_CONTAINER_BASE/2, 100 + L_CONTAINER_BASE/2);
+    scene.add(mesh);
+}
+
+function createGrabbables() {
+    'use strict';
+
+    // cube
+    geometry = new THREE.BoxGeometry(CUBE_SIDE, CUBE_SIDE, CUBE_SIDE);
+    mesh = new THREE.Mesh(geometry, materials[4]);
+    mesh.position.set(100, CUBE_SIDE/2, 100);
+    scene.add(mesh);
+
+    // dodecahedron
+    geometry = new THREE.DodecahedronGeometry(DODECAHEDRON_RADIUS);
+    mesh = new THREE.Mesh(geometry, materials[5]);
+    mesh.position.set(-20, DODECAHEDRON_RADIUS, 120);
+    scene.add(mesh);
+
+    // icosahedron
+    geometry = new THREE.IcosahedronGeometry(ICOSAHEDRON_RADIUS);
+    mesh = new THREE.Mesh(geometry, materials[6]);
+    mesh.position.set(20, ICOSAHEDRON_RADIUS, 30);
+    scene.add(mesh);
+
+    // torus
+    geometry = new THREE.TorusGeometry(TORUS_RADIUS, TORUS_TUBE);
+    mesh = new THREE.Mesh(geometry, materials[7]);
+    mesh.position.set(-100, TORUS_RADIUS + TORUS_TUBE * 2, -140);
+    scene.add(mesh);
+
+    // torus knot
+    geometry = new THREE.TorusKnotGeometry(TORUS_KNOT_RADIUS, TORUS_KNOT_TUBE);
+    mesh = new THREE.Mesh(geometry, materials[8]);
+    mesh.position.set(50, TORUS_KNOT_RADIUS + TORUS_KNOT_TUBE * 2, -20);
     scene.add(mesh);
 }
 
@@ -438,8 +486,8 @@ function animate() {
     if (block.userData.opening) {
         //block.children[1].rotation.x += CLAW_SPEED * delta_t;
         //block.children[2].rotation.x -= CLAW_SPEED * delta_t;
-        block.children[3].rotation.z -= CLAW_SPEED * delta_t;
-        block.children[4].rotation.z += CLAW_SPEED * delta_t;
+        block.children[3].rotation.x -= CLAW_SPEED * delta_t;
+        block.children[4].rotation.x += CLAW_SPEED * delta_t;
     }
     if (block.userData.closing) {
         console.log("rotation.x",block.children[1].rotation.x);
@@ -448,8 +496,8 @@ function animate() {
         //block.children[1].rotation.x -= CLAW_SPEED * delta_t;
         //block.children[2].rotation.x += CLAW_SPEED * delta_t;
 
-        block.children[3].rotation.z += CLAW_SPEED * delta_t;
-        block.children[4].rotation.z -= CLAW_SPEED * delta_t;
+        block.children[3].rotation.x += CLAW_SPEED * delta_t;
+        block.children[4].rotation.x -= CLAW_SPEED * delta_t;
     }
 
     camera6.lookAt(trolley.position)        //TODO : FIX CAMERA 6
