@@ -21,6 +21,8 @@ var jib, block, trolley;
 
 var cable_y_offset = 0;
 
+var clock = new THREE.Clock();
+
 ///////////////
 /* CONSTANTS */
 ///////////////
@@ -57,7 +59,7 @@ const H_TROLLEY = 5;
 const D_TROLLEY = 80;
 
 const W_CABLE = W_PENDANT;
-const H_CABLE = 50;              // TODO: ADD DELTA2
+const H_CABLE = 50;
 
 const W_BLOCK = 8;
 const H_BLOCK = 4;
@@ -65,13 +67,19 @@ const H_BLOCK = 4;
 const W_CLAW = 8;
 const H_CLAW = 10;
 
+const JIB_SPEED = 0.8;
 const MAX_THETA1 = Math.PI;
 const MIN_THETA1 = - Math.PI;
+
+const TROLLEY_SPEED = 20;
 const MAX_DELTA1 = L_JIB;
 const MIN_DELTA1 = 3 * W_TROLLEY/2 + W_BASE/2;
+
+const CLAW_BLOCK_SPEED = 30;
 const MAX_DELTA2 = - H_TROLLEY;
-const MIN_DELTA2 = - (0.9 * H_TOWER + H_JIB_CJIB/2 - H_TROLLEY - Math.sqrt(Math.pow(H_CLAW, 2) + Math.pow(W_CLAW/2, 2)));
-const ONE_DEGREE = Math.PI / 180;
+const MIN_DELTA2 = - (0.9 * H_TOWER + H_JIB_CJIB/2 - H_TROLLEY -  2 * H_CLAW);
+
+const CLAW_SPEED = 0.5;
 
 const W_CONTAINER_BASE = 50;
 const H_CONTAINER_BASE = 5;
@@ -224,7 +232,7 @@ function createBlockAndClaw(obj, x, y, z) {
     'use strict';
 
     block = new THREE.Object3D();
-    block.userData = { movingDown: false, movingUp: false, closing: false, opening: false, movStep: 0.1, rotStep: ONE_DEGREE }
+    block.userData = { movingDown: false, movingUp: false, closing: false, opening: false }
 
     block.position.x = x;
     block.position.y = y;
@@ -247,7 +255,7 @@ function createTrolley(obj, x, y, z) {
     'use strict';
 
     trolley = new THREE.Object3D();
-    trolley.userData = { movingForward: false, movingBackwards: false, step: 0.1 };
+    trolley.userData = { movingForward: false, movingBackwards: false };
 
     trolley.position.x = x;
     trolley.position.y = y;
@@ -268,7 +276,7 @@ function createCraneJib(x, y, z) {
     'use strict';
     
     jib = new THREE.Object3D();
-    jib.userData = { rotatingRight: false, rotatingLeft: false, step: ONE_DEGREE };
+    jib.userData = { rotatingRight: false, rotatingLeft: false };
 
     scene.add(jib);
 
@@ -384,7 +392,7 @@ function init() {
     camera5 = createPerspectiveCamera(-250, 250, 250);
     camera6 = createPerspectiveCamera(250, -250, 250);
 
-    camera= camera1;
+    camera = camera1;
 
 
     window.addEventListener("keydown", onKeyDown);
@@ -399,50 +407,47 @@ function init() {
 /////////////////////
 function animate() {
     'use strict';
+    var delta_t = clock.getDelta();
 
     if (jib.userData.rotatingRight && jib.rotation.y <= MAX_THETA1)
-        jib.rotation.y += jib.userData.step;
+        jib.rotation.y += JIB_SPEED * delta_t;
     if (jib.userData.rotatingLeft && jib.rotation.y >= MIN_THETA1)
-        jib.rotation.y -= jib.userData.step;
+        jib.rotation.y -= JIB_SPEED * delta_t;
 
     if (trolley.userData.movingForward && trolley.position.z <= MAX_DELTA1)
-        trolley.position.z += trolley.userData.step;
+        trolley.position.z += TROLLEY_SPEED * delta_t;
     if (trolley.userData.movingBackwards && trolley.position.z >= MIN_DELTA1)
-        trolley.position.z -= trolley.userData.step;
+        trolley.position.z -= TROLLEY_SPEED * delta_t;
 
     if (block.userData.movingDown && block.position.y >= MIN_DELTA2) {
-        block.position.y -= block.userData.movStep;
-        cable_y_offset -= block.userData.movStep;
+        block.position.y -= CLAW_BLOCK_SPEED * delta_t;
+        cable_y_offset -= CLAW_BLOCK_SPEED * delta_t;
         trolley.children[CABLE_INDEX].position.y = -(H_CABLE - cable_y_offset)/2 - H_TROLLEY/2;
-        trolley.children[CABLE_INDEX].scale.y += block.userData.movStep / H_CABLE;
+        trolley.children[CABLE_INDEX].scale.y += CLAW_BLOCK_SPEED * delta_t / H_CABLE;
     }
 
     if (block.userData.movingUp && block.position.y <= MAX_DELTA2) {
-        block.position.y += block.userData.movStep;
-        cable_y_offset += block.userData.movStep;
+        block.position.y += CLAW_BLOCK_SPEED * delta_t;
+        cable_y_offset += CLAW_BLOCK_SPEED * delta_t;
         trolley.children[CABLE_INDEX].position.y = -(H_CABLE - cable_y_offset)/2 - H_TROLLEY/2;
-        trolley.children[CABLE_INDEX].scale.y -= block.userData.movStep / H_CABLE;
+        trolley.children[CABLE_INDEX].scale.y -= CLAW_BLOCK_SPEED * delta_t / H_CABLE;
     }
 
     if (block.userData.opening) {
-        //block.children[1].rotation.x += block.userData.rotStep;
-        //block.children[1].position.z += W_BLOCK/2 * (1 - Math.cos(block.userData.rotStep));
-        //block.children[1].position.y -= Math.sqrt(32) * Math.sin(block.userData.rotStep);
-        //block.children[2].rotation.x -= block.userData.rotStep;
-        //block.children[3].rotation.z -= block.userData.rotStep;
-        //block.children[4].rotation.z += block.userData.rotStep;
+        //block.children[1].rotation.x += CLAW_SPEED * delta_t;
+        //block.children[2].rotation.x -= CLAW_SPEED * delta_t;
+        block.children[3].rotation.z -= CLAW_SPEED * delta_t;
+        block.children[4].rotation.z += CLAW_SPEED * delta_t;
     }
     if (block.userData.closing) {
-        //console.log("rotation.x",block.children[1].rotation.x);
+        console.log("rotation.x",block.children[1].rotation.x);
         //console.log(block.children[1].position.z);
         //console.log(block.children[1].position.y);
-        //block.children[1].rotation.x -= block.userData.rotStep;
-        //block.children[1].position.z -= W_BLOCK/2 * (1 - Math.cos(block.userData.rotStep));
-        //block.children[1].position.y += Math.sqrt(32) * Math.sin(block.userData.rotStep);
-        //block.children[2].rotation.x += block.userData.rotStep;
+        //block.children[1].rotation.x -= CLAW_SPEED * delta_t;
+        //block.children[2].rotation.x += CLAW_SPEED * delta_t;
 
-        //block.children[3].rotation.z += block.userData.rotStep;
-        //block.children[4].rotation.z -= block.userData.rotStep;
+        block.children[3].rotation.z += CLAW_SPEED * delta_t;
+        block.children[4].rotation.z -= CLAW_SPEED * delta_t;
     }
     
     render();
@@ -510,12 +515,12 @@ function onKeyDown(e) {
     case 115://s
         trolley.userData.movingForward = true;
         break;
-    case 69: //D
-    case 101://d
+    case 68: //D
+    case 100://d
         block.userData.movingDown = true;
         break;
-    case 68: //E
-    case 100://e
+    case 69: //E
+    case 101://e
         block.userData.movingUp = true;
         break;
     case 82: //R
@@ -552,12 +557,12 @@ function onKeyUp(e){
     case 115://s
         trolley.userData.movingForward = false;
         break;
-    case 69: //D
-    case 101://d
+    case 68: //D
+    case 100://d
         block.userData.movingDown = false;
         break;
-    case 68: //E
-    case 100://e
+    case 69: //E
+    case 101://e
         block.userData.movingUp = false;
         break;
     case 82: //R
