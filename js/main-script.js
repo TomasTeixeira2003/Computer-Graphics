@@ -128,7 +128,7 @@ function createPerspectiveCamera(x, y, z) {
 }
 
 
-function createOrthographicCamera(x, y, z) {
+function createOrthographicCamera(x, y, z, target) {
     'use strict';
     var camera = new THREE.OrthographicCamera(window.innerWidth / -4,
                                           window.innerWidth / 4,
@@ -139,7 +139,7 @@ function createOrthographicCamera(x, y, z) {
     camera.position.x = x;
     camera.position.y = y;
     camera.position.z = z;
-    camera.lookAt(scene.position);
+    camera.lookAt(target);
 
     return camera;
 }
@@ -249,6 +249,8 @@ function createBlockAndClaw(obj, x, y, z) {
     addClaw(block,      0    , -H_CLAW/2 - H_BLOCK,  W_BLOCK/2,  Math.PI);
     addClaw(block, -W_BLOCK/2, -H_CLAW/2 - H_BLOCK,      0    ,  Math.PI/2);
     addClaw(block,  W_BLOCK/2, -H_CLAW/2 - H_BLOCK,      0    , 3*Math.PI/2);
+
+    block.add(new THREE.AxesHelper(100));
 }
 
 function createTrolley(obj, x, y, z) {
@@ -385,12 +387,12 @@ function init() {
     document.body.appendChild(renderer.domElement);
 
     createScene();
-    camera1 = createOrthographicCamera(0, 0, 2000);
-    camera2 = createOrthographicCamera(2000, 0, 0);
-    camera3 = createOrthographicCamera(0, 2000, 0);
-    camera4 = createPerspectiveCamera(250, 250, 250);
+    camera1 = createOrthographicCamera(0, 0, 2000, new THREE.Vector3(0, 100, 0));
+    camera2 = createOrthographicCamera(2000, 0, 0, new THREE.Vector3(0, 100, 80));
+    camera3 = createOrthographicCamera(0, 2000, 0, new THREE.Vector3(0, 100, 0));
+    camera4 = createOrthographicCamera(0, 2000, 2000, new THREE.Vector3(0, 100, 0));
     camera5 = createPerspectiveCamera(-250, 250, 250);
-    camera6 = createPerspectiveCamera(250, -250, 250);
+    camera6 = createPerspectiveCamera(0, 0, 0);
 
     camera = camera1;
 
@@ -449,6 +451,9 @@ function animate() {
         block.children[3].rotation.z += CLAW_SPEED * delta_t;
         block.children[4].rotation.z -= CLAW_SPEED * delta_t;
     }
+
+    camera6.lookAt(trolley.position)        //TODO : FIX CAMERA 6
+    camera6.position.copy(block.position);
     
     render();
 
