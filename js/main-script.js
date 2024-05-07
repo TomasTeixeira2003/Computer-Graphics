@@ -15,10 +15,11 @@ var materials = [new THREE.MeshBasicMaterial({ color: 0xbbbbbb, wireframe: true 
                  new THREE.MeshBasicMaterial({ color: 0xffaa00, wireframe: true }),
                  new THREE.MeshBasicMaterial({ color: 0x4d4dff, wireframe: true }),
                  new THREE.MeshBasicMaterial({ color: 0xD2042D, wireframe: true }),
-                 new THREE.MeshBasicMaterial({ color: 0x991781, wireframe: true }),
-                 new THREE.MeshBasicMaterial({ color: 0x409917, wireframe: true }),
+                 new THREE.MeshBasicMaterial({ color: 0x660f56, wireframe: true }),
+                 new THREE.MeshBasicMaterial({ color: 0x295e11, wireframe: true }),
                  new THREE.MeshBasicMaterial({ color: 0x179799, wireframe: true }),
-                 new THREE.MeshBasicMaterial({ color: 0xE918BB, wireframe: true })]
+                 new THREE.MeshBasicMaterial({ color: 0xE918BB, wireframe: true }),
+                 new THREE.MeshBasicMaterial({ color: 0x74d455, wireframe: true })]
 
 var geometry, mesh;
 
@@ -105,6 +106,8 @@ const TORUS_RADIUS = 10;
 const TORUS_TUBE = 2; 
 const TORUS_KNOT_RADIUS = 12;
 const TORUS_KNOT_TUBE = 2;
+const TORUS_KNOT_RADIUS_2 = 12;
+const TORUS_KNOT_TUBE_2 = 1;
 
 const CABLE_INDEX = 1;          // used while performing cable animation
 
@@ -263,8 +266,6 @@ function createBlockAndClaw(obj, x, y, z) {
     addClaw(block,      0    , -H_CLAW/2 - H_BLOCK,  W_BLOCK/2,  Math.PI);
     addClaw(block, -W_BLOCK/2, -H_CLAW/2 - H_BLOCK,      0    ,  Math.PI/2);
     addClaw(block,  W_BLOCK/2, -H_CLAW/2 - H_BLOCK,      0    , 3*Math.PI/2);
-
-    block.add(new THREE.AxesHelper(100));
 }
 
 function createTrolley(obj, x, y, z) {
@@ -380,13 +381,21 @@ function createGrabbables() {
     // torus
     geometry = new THREE.TorusGeometry(TORUS_RADIUS, TORUS_TUBE);
     mesh = new THREE.Mesh(geometry, materials[7]);
-    mesh.position.set(-100, TORUS_RADIUS + TORUS_TUBE * 2, -140);
+    mesh.position.set(-100, TORUS_RADIUS + TORUS_TUBE, -140);
+    mesh.rotation.y = Math.PI/4;
     scene.add(mesh);
 
     // torus knot
     geometry = new THREE.TorusKnotGeometry(TORUS_KNOT_RADIUS, TORUS_KNOT_TUBE);
     mesh = new THREE.Mesh(geometry, materials[8]);
-    mesh.position.set(50, TORUS_KNOT_RADIUS + TORUS_KNOT_TUBE * 2, -20);
+    mesh.position.set(50, TORUS_KNOT_RADIUS + TORUS_KNOT_TUBE * 4, -80);
+    scene.add(mesh);
+
+    // torus knot 2
+    geometry = new THREE.TorusKnotGeometry(TORUS_KNOT_RADIUS_2, TORUS_KNOT_TUBE_2, 64, 8, 12, 10);
+    mesh = new THREE.Mesh(geometry, materials[9]);
+    mesh.position.set(-160, TORUS_KNOT_RADIUS + TORUS_KNOT_TUBE * 2, 0);
+    mesh.rotation.y = 3*Math.PI/4;
     scene.add(mesh);
 }
 
