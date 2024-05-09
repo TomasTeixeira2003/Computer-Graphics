@@ -1,41 +1,83 @@
 <!doctype html>
 <html>
 <head>
-    <meta charset="�utf-8" �>
-    <title>Grupo 61 - Entrega B</title>
-    <link rel="stylesheet" href="css/style.css">
-    <script type="importmap">
-        {
-          "imports": {
-            "three": "https://cdn.jsdelivr.net/npm/three@v0.163.0/build/three.module.js",
-            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/"
-          }
-        }
-    </script>
+	<meta charset="utf-8">
+	<title>Grupo 61 - Entrega B</title>
+	<link rel="stylesheet" href="css/style.css">
+	<style>
+		.highlight {
+			background-color: yellow;
+		}
+	</style>
+	<script type="importmap">
+		{
+		  "imports": {
+			"three": "https://cdn.jsdelivr.net/npm/three@v0.163.0/build/three.module.js",
+			"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/"
+		  }
+		}
+	</script>
 </head>
 <body>
-  <script type="module" src="js/main-script.js"></script>
-  <div style="background: white; position: absolute; padding-left: 1vi; padding-right: 1vi;">
-    <h2><b>HUD</b></h2>
-    <dl>
-      <dt>Câmeras</dt>
-        <dd>1 - Câmera frontal de projeção ortogonal</dd>
-        <dd>2 - Câmera lateral de projeção ortogonal</dd>
-        <dd>3 - Câmera de topo de projeção ortogonal</dd>
-        <dd>4 - Câmera fixa de projeção ortogonal</dd>
-        <dd>5 - Câmera fixa de projeção perspetiva</dd>
-        <dd>6 - Câmera móvel de projeção perspetiva</dd>
-      <br>
-      <dt>Controlos da grua</dt>
-        <dd>Q - Rodar grua (sentido horário)</dd>
-        <dd>A - Rodar grua (sentido anti-horário)</dd>
-        <dd>W - Deslocar carrinho para a frente</dd>
-        <dd>S - Deslocar carrinho para trás</dd>
-        <dd>E - Subir garra</dd>
-        <dd>D - Descer garra</dd>
-        <dd>R - Abrir garra</dd>
-        <dd>F - Fechar garra</dd>
-    </dl>
-  </div> 
+	<script type="module" src="js/main-script.js"></script>
+	<div id="keys" style="background: white; position: absolute; padding-left: 1vi; padding-right: 1vi;">
+		<h2><b>HUD</b></h2>
+		<dl>
+			<dt>Câmeras</dt>
+				<dd>1 - Câmera frontal de projeção ortogonal</dd>
+				<dd>2 - Câmera lateral de projeção ortogonal</dd>
+				<dd>3 - Câmera de topo de projeção ortogonal</dd>
+				<dd>4 - Câmera fixa de projeção ortogonal</dd>
+				<dd>5 - Câmera fixa de projeção perspetiva</dd>
+				<dd>6 - Câmera móvel de projeção perspetiva</dd>
+			<br>
+			<dt>Controlos da grua</dt>
+				<dd>Q - Rodar grua (sentido horário)</dd>
+				<dd>A - Rodar grua (sentido anti-horário)</dd>
+				<dd>W - Deslocar carrinho para a frente</dd>
+				<dd>S - Deslocar carrinho para trás</dd>
+				<dd>E - Subir garra</dd>
+				<dd>D - Descer garra</dd>
+				<dd>R - Abrir garra</dd>
+				<dd>F - Fechar garra</dd>
+		</dl>
+	</div> 
+
+	<script>
+		const pressedKeys = new Set();
+
+		document.addEventListener('keydown', function(event) {
+			const key = event.key.toUpperCase();
+			const element = document.getElementById('keys');
+			pressedKeys.add(key);
+
+			const keys = element.getElementsByTagName('dd');
+			for (let i = 0; i < keys.length; i++) {
+				const text = keys[i].textContent.split('-')[0].trim();
+				if (pressedKeys.has(text)) {
+					keys[i].classList.add('highlight');
+				} else {
+					keys[i].classList.remove('highlight');
+				}
+			}
+		});
+
+		document.addEventListener('keyup', function(event) {
+			const key = event.key.toUpperCase()
+			pressedKeys.delete(key);
+
+			const element = document.getElementById('keys');
+			const keys = element.getElementsByTagName('dd');
+			for (let i = 0; i < keys.length; i++) {
+				const text = keys[i].textContent.split('-')[0].trim();
+				if (pressedKeys.has(text)) {
+					keys[i].classList.add('highlight');
+				} else {
+					keys[i].classList.remove('highlight');
+				}
+			}
+		});
+	</script>
 </body>
 </html>
+
