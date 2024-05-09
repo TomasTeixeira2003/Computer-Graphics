@@ -40,8 +40,8 @@ const H_TOWER = 220;
 const W_TOWER = 10; 
 
 const H_JIB_CJIB = 10;
-const L_CJIB = 50;                        // l_clança
-const L_JIB = 180;                        // l_lança
+const L_CJIB = 50;                            // l_clança
+const L_JIB = 180;                            // l_lança
 const L_JIB_CJIB = L_CJIB + W_TOWER + L_JIB;  // l_clança + w_torre + l_lança
 
 const W_PENDANT = 1;
@@ -70,7 +70,7 @@ const H_CABLE = 50;
 const W_BLOCK = 8;
 const H_BLOCK = 4;
 
-const W_CLAW = 8;
+const W_CLAW = 4;
 const H_CLAW = 10;
 
 const JIB_SPEED = 0.8;
@@ -106,8 +106,8 @@ const TORUS_RADIUS = 10;
 const TORUS_TUBE = 2; 
 const TORUS_KNOT_RADIUS = 12;
 const TORUS_KNOT_TUBE = 2;
-const TORUS_KNOT_RADIUS_2 = 12;
-const TORUS_KNOT_TUBE_2 = 1;
+const CAPSULE_RADIUS = 8;
+const CAPSULE_LENGHT = 4;
 
 const CABLE_INDEX = 1;          // used while performing cable animation
 
@@ -144,13 +144,14 @@ function createPerspectiveCamera(x, y, z) {
     return camera;
 }
 
-
 function createOrthographicCamera(x, y, z, target) {
     'use strict';
-    var camera = new THREE.OrthographicCamera(window.innerWidth / -4,
-                                          window.innerWidth / 4,
-                                          window.innerHeight / 4,
-                                          window.innerHeight / -4,
+    var height = 250;
+    var ratio = window.innerWidth / window.innerHeight;
+    var camera = new THREE.OrthographicCamera(-height * ratio,
+                                          height * ratio,
+                                          height,
+                                          -height,
                                           1,
                                           10000);
     camera.position.x = x;
@@ -266,6 +267,10 @@ function createBlockAndClaw(obj, x, y, z) {
     addClaw(block,      0    , -H_CLAW/2 - H_BLOCK,  W_BLOCK/2,  Math.PI);
     addClaw(block, -W_BLOCK/2, -H_CLAW/2 - H_BLOCK,      0    ,  Math.PI/2);
     addClaw(block,  W_BLOCK/2, -H_CLAW/2 - H_BLOCK,      0    , 3*Math.PI/2);
+
+    camera6 = createPerspectiveCamera(0, 0, 0);
+    camera6.lookAt(0, -2000, 0);
+    block.add(camera6);
 }
 
 function createTrolley(obj, x, y, z) {
@@ -382,7 +387,7 @@ function createGrabbables() {
     geometry = new THREE.TorusGeometry(TORUS_RADIUS, TORUS_TUBE);
     mesh = new THREE.Mesh(geometry, materials[7]);
     mesh.position.set(-100, TORUS_RADIUS + TORUS_TUBE, -140);
-    mesh.rotation.y = Math.PI/4;
+    mesh.rotateY(Math.PI/4);
     scene.add(mesh);
 
     // torus knot
@@ -391,11 +396,10 @@ function createGrabbables() {
     mesh.position.set(50, TORUS_KNOT_RADIUS + TORUS_KNOT_TUBE * 4, -80);
     scene.add(mesh);
 
-    // torus knot 2
-    geometry = new THREE.TorusKnotGeometry(TORUS_KNOT_RADIUS_2, TORUS_KNOT_TUBE_2, 64, 8, 12, 10);
+    // capsule
+    geometry = new THREE.CapsuleGeometry(CAPSULE_RADIUS, CAPSULE_LENGHT);
     mesh = new THREE.Mesh(geometry, materials[9]);
-    mesh.position.set(-160, TORUS_KNOT_RADIUS + TORUS_KNOT_TUBE * 2, 0);
-    mesh.rotation.y = 3*Math.PI/4;
+    mesh.position.set(-160, CAPSULE_LENGHT/2 + CAPSULE_RADIUS, 0);
     scene.add(mesh);
 }
 
@@ -444,15 +448,13 @@ function init() {
     document.body.appendChild(renderer.domElement);
 
     createScene();
-    camera1 = createOrthographicCamera(0, 0, 2000, new THREE.Vector3(0, 100, 0));
-    camera2 = createOrthographicCamera(2000, 0, 0, new THREE.Vector3(0, 100, 80));
+    camera1 = createOrthographicCamera(2000, 0, 0, new THREE.Vector3(0, 100, 80));
+    camera2 = createOrthographicCamera(0, 0, 2000, new THREE.Vector3(0, 100, 0));
     camera3 = createOrthographicCamera(0, 2000, 0, new THREE.Vector3(0, 100, 0));
     camera4 = createOrthographicCamera(0, 2000, 2000, new THREE.Vector3(0, 100, 0));
     camera5 = createPerspectiveCamera(-250, 250, 250);
-    camera6 = createPerspectiveCamera(0, 0, 0);
 
     camera = camera1;
-
 
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
@@ -469,9 +471,9 @@ function animate() {
     var delta_t = clock.getDelta();
 
     if (jib.userData.rotatingRight && jib.rotation.y <= MAX_THETA1)
-        jib.rotation.y += JIB_SPEED * delta_t;
+        jib.rotateY(JIB_SPEED * delta_t);
     if (jib.userData.rotatingLeft && jib.rotation.y >= MIN_THETA1)
-        jib.rotation.y -= JIB_SPEED * delta_t;
+        jib.rotateY(-JIB_SPEED * delta_t);
 
     if (trolley.userData.movingForward && trolley.position.z <= MAX_DELTA1)
         trolley.position.z += TROLLEY_SPEED * delta_t;
@@ -493,27 +495,19 @@ function animate() {
     }
 
     if (block.userData.opening) {
-        //block.children[1].rotation.x += CLAW_SPEED * delta_t;
-        //block.children[2].rotation.x -= CLAW_SPEED * delta_t;
-        block.children[3].rotation.x -= CLAW_SPEED * delta_t;
-        block.children[4].rotation.x += CLAW_SPEED * delta_t;
+        block.children[1].rotateX(CLAW_SPEED * delta_t);
+        block.children[2].rotateX(-CLAW_SPEED * delta_t);
+        block.children[3].rotateX(CLAW_SPEED * delta_t);
+        block.children[4].rotateX(CLAW_SPEED * delta_t);
     }
     if (block.userData.closing) {
-        console.log("rotation.x",block.children[1].rotation.x);
-        //console.log(block.children[1].position.z);
-        //console.log(block.children[1].position.y);
-        //block.children[1].rotation.x -= CLAW_SPEED * delta_t;
-        //block.children[2].rotation.x += CLAW_SPEED * delta_t;
-
-        block.children[3].rotation.x += CLAW_SPEED * delta_t;
-        block.children[4].rotation.x -= CLAW_SPEED * delta_t;
+        block.children[1].rotateX(-CLAW_SPEED * delta_t);
+        block.children[2].rotateX(CLAW_SPEED * delta_t);
+        block.children[3].rotateX(-CLAW_SPEED * delta_t);
+        block.children[4].rotateX(-CLAW_SPEED * delta_t);
     }
-
-    camera6.lookAt(trolley.position)        //TODO : FIX CAMERA 6
-    camera6.position.copy(block.position);
     
     render();
-
     requestAnimationFrame(animate);
 }
 
@@ -562,35 +556,27 @@ function onKeyDown(e) {
             materials[i].wireframe = !materials[i].wireframe;   
         break;
     case 81: //Q
-    case 113://q
         jib.userData.rotatingLeft = true;
         break;
     case 65: //A
-    case 97: //a
         jib.userData.rotatingRight = true;
         break;
     case 87: //W
-    case 119://w
-        trolley.userData.movingBackwards = true;
-        break;
-    case 83: //S
-    case 115://s
         trolley.userData.movingForward = true;
         break;
+    case 83: //S
+        trolley.userData.movingBackwards = true;
+        break;
     case 68: //D
-    case 100://d
         block.userData.movingDown = true;
         break;
     case 69: //E
-    case 101://e
         block.userData.movingUp = true;
         break;
     case 82: //R
-    case 114://r
         block.userData.opening = true;
         break;
     case 70: //F
-    case 102://f
         block.userData.closing = true;
         break;
     }
@@ -604,35 +590,27 @@ function onKeyUp(e){
 
     switch (e.keyCode) {
     case 65: //A
-    case 97: //a
         jib.userData.rotatingRight = false;
         break;
     case 81: //Q
-    case 113://q
         jib.userData.rotatingLeft = false;
         break;
     case 87: //W
-    case 119://w
-        trolley.userData.movingBackwards = false;
-        break;
-    case 83: //S
-    case 115://s
         trolley.userData.movingForward = false;
         break;
+    case 83: //S
+        trolley.userData.movingBackwards = false;
+        break;
     case 68: //D
-    case 100://d
         block.userData.movingDown = false;
         break;
     case 69: //E
-    case 101://e
         block.userData.movingUp = false;
         break;
     case 82: //R
-    case 114://r
         block.userData.opening = false;
         break;
     case 70: //F
-    case 102://f
         block.userData.closing = false;
         break;
     }
