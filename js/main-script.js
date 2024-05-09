@@ -14,6 +14,7 @@ var materials = [new THREE.MeshBasicMaterial({ color: 0xbbbbbb, wireframe: true 
                  new THREE.MeshBasicMaterial({ color: 0xffdd00, wireframe: true }),
                  new THREE.MeshBasicMaterial({ color: 0xffaa00, wireframe: true }),
                  new THREE.MeshBasicMaterial({ color: 0x4d4dff, wireframe: true }),
+                 new THREE.MeshBasicMaterial({ color: 0x2d2d9c, wireframe: true }),
                  new THREE.MeshBasicMaterial({ color: 0xD2042D, wireframe: true }),
                  new THREE.MeshBasicMaterial({ color: 0x660f56, wireframe: true }),
                  new THREE.MeshBasicMaterial({ color: 0x295e11, wireframe: true }),
@@ -38,6 +39,8 @@ var clock = new THREE.Clock();
 ///////////////
 /* CONSTANTS */
 ///////////////
+
+const ORTHOGRAPHIC_HEIGHT = 250;
 
 const H_BASE = 10;
 const W_BASE = 20;
@@ -92,6 +95,9 @@ const CLAW_BLOCK_SPEED = 30;
 const MAX_DELTA2 = - H_TROLLEY;
 const MIN_DELTA2 = - (0.9 * H_TOWER + H_JIB_CJIB/2 - H_TROLLEY -  H_CLAW);
 
+const MAX_THETA2 = Math.PI/6;
+const MIN_THETA2 = -Math.PI/8;
+
 const CLAW_SPEED = 0.5;
 
 const W_CONTAINER_BASE = 50;
@@ -109,9 +115,9 @@ const L_CONTAINER_FRONT = H_CONTAINER_BASE;
 const CUBE_SIDE = 15;
 const DODECAHEDRON_RADIUS = 10;
 const ICOSAHEDRON_RADIUS = 8;
-const TORUS_RADIUS = 10;
+const TORUS_RADIUS = 12;
 const TORUS_TUBE = 2; 
-const TORUS_KNOT_RADIUS = 12;
+const TORUS_KNOT_RADIUS = 14;
 const TORUS_KNOT_TUBE = 2;
 const CAPSULE_RADIUS = 8;
 const CAPSULE_LENGHT = 4;
@@ -139,7 +145,7 @@ function createScene() {
 
 function createPerspectiveCamera(x, y, z) {
     'use strict';
-    var camera = new THREE.PerspectiveCamera(70,
+    var camera = new THREE.PerspectiveCamera(60,
                                          window.innerWidth / window.innerHeight,
                                          1,
                                          1000);
@@ -153,7 +159,7 @@ function createPerspectiveCamera(x, y, z) {
 
 function createOrthographicCamera(x, y, z, target) {
     'use strict';
-    var height = 250;
+    var height = ORTHOGRAPHIC_HEIGHT;
     var ratio = window.innerWidth / window.innerHeight;
     var camera = new THREE.OrthographicCamera(-height * ratio,
                                           height * ratio,
@@ -172,6 +178,8 @@ function createOrthographicCamera(x, y, z, target) {
 /////////////////////
 /* CREATE LIGHT(S) */
 /////////////////////
+
+// NONE
 
 ////////////////////////
 /* CREATE OBJECT3D(S) */
@@ -248,8 +256,6 @@ function addClaw(obj, x, y, z, rot) {
     mesh.rotation.z = Math.PI;
     mesh.position.set(x, y, z);
 
-    // TODO: ADD THETA2
-
     obj.add(mesh);
 }
 
@@ -270,13 +276,16 @@ function createBlockAndClaw(obj, x, y, z) {
     mesh.position.set(0, - H_BLOCK/2, 0);
     block.add(mesh);
 
+    // different angle values are used to rotate the claws so that they are 
+    // facing the center of the claw
     addClaw(block,      0    , -H_CLAW/2 - H_BLOCK, -W_BLOCK/2,  0);
     addClaw(block,      0    , -H_CLAW/2 - H_BLOCK,  W_BLOCK/2,  Math.PI);
     addClaw(block, -W_BLOCK/2, -H_CLAW/2 - H_BLOCK,      0    ,  Math.PI/2);
     addClaw(block,  W_BLOCK/2, -H_CLAW/2 - H_BLOCK,      0    , 3*Math.PI/2);
 
-    camera6 = createPerspectiveCamera(0, 0, 0);
-    camera6.lookAt(0, -2000, 30);
+    camera6 = createPerspectiveCamera(0, - H_BLOCK, 0);
+    camera6.lookAt(0, -500, 0);
+    camera6.rotateZ(Math.PI);  // rotate camera towards the front of the crane
     block.add(camera6);
 }
 
@@ -318,8 +327,8 @@ function createCraneJib(x, y, z) {
     mesh.position.set(0, 0, W_TOWER/2 + L_JIB/2 - L_CJIB/2);
     jib.add(mesh);
 
-    addFrontPendant(jib, 0, 0, 0);   // Tirante 1
-    addRearPendant(jib, 0, 0, 0);    // Tirante 2
+    addFrontPendant(jib, 0, 0, 0);   // Pendant (tirante) 1
+    addRearPendant(jib, 0, 0, 0);    // Pendant (tirante) 2
     addCabin(jib, 0, 0, 0);
     addCounterWeight(jib, 0, 0, 0);
 
@@ -340,7 +349,7 @@ function createContainer() {
 
     // base
     geometry = new THREE.BoxGeometry(W_CONTAINER_BASE, H_CONTAINER_BASE, L_CONTAINER_BASE);
-    mesh = new THREE.Mesh(geometry, materials[3]);
+    mesh = new THREE.Mesh(geometry, materials[4]);
     mesh.position.set(150, H_CONTAINER_BASE/2, 100);
     scene.add(mesh);
 
@@ -374,7 +383,7 @@ function createGrabbables() {
 
     // cube
     geometry = new THREE.BoxGeometry(CUBE_SIDE, CUBE_SIDE, CUBE_SIDE);
-    cube = new THREE.Mesh(geometry, materials[4]);
+    cube = new THREE.Mesh(geometry, materials[5]);
     cube.position.set(100, CUBE_SIDE/2, 100);
     geometry.computeBoundingSphere();
     r_cube = geometry.boundingSphere.radius;
@@ -382,7 +391,7 @@ function createGrabbables() {
 
     // dodecahedron
     geometry = new THREE.DodecahedronGeometry(DODECAHEDRON_RADIUS);
-    dodecahedron = new THREE.Mesh(geometry, materials[5]);
+    dodecahedron = new THREE.Mesh(geometry, materials[6]);
     dodecahedron.position.set(-20, DODECAHEDRON_RADIUS, 120);
     geometry.computeBoundingSphere();
     r_dodecahedron = geometry.boundingSphere.radius;
@@ -390,7 +399,7 @@ function createGrabbables() {
 
     // icosahedron
     geometry = new THREE.IcosahedronGeometry(ICOSAHEDRON_RADIUS);
-    icosahedron = new THREE.Mesh(geometry, materials[6]);
+    icosahedron = new THREE.Mesh(geometry, materials[7]);
     icosahedron.position.set(20, ICOSAHEDRON_RADIUS, 30);
     geometry.computeBoundingSphere();
     r_icosahedron = geometry.boundingSphere.radius;
@@ -398,7 +407,7 @@ function createGrabbables() {
 
     // torus
     geometry = new THREE.TorusGeometry(TORUS_RADIUS, TORUS_TUBE);
-    torus = new THREE.Mesh(geometry, materials[7]);
+    torus = new THREE.Mesh(geometry, materials[8]);
     torus.position.set(-100, TORUS_RADIUS + TORUS_TUBE, -140);
     torus.rotateY(Math.PI/4);
     geometry.computeBoundingSphere();
@@ -407,7 +416,7 @@ function createGrabbables() {
 
     // torus knot
     geometry = new THREE.TorusKnotGeometry(TORUS_KNOT_RADIUS, TORUS_KNOT_TUBE);
-    torusKnot = new THREE.Mesh(geometry, materials[8]);
+    torusKnot = new THREE.Mesh(geometry, materials[9]);
     torusKnot.position.set(50, TORUS_KNOT_RADIUS + TORUS_KNOT_TUBE * 4, -80);
     geometry.computeBoundingSphere();
     r_torusKnot = geometry.boundingSphere.radius;
@@ -415,7 +424,7 @@ function createGrabbables() {
 
     // capsule
     geometry = new THREE.CapsuleGeometry(CAPSULE_RADIUS, CAPSULE_LENGHT);
-    capsule = new THREE.Mesh(geometry, materials[9]);
+    capsule = new THREE.Mesh(geometry, materials[10]);
     capsule.position.set(-160, CAPSULE_LENGHT/2 + CAPSULE_RADIUS, 0);
     geometry.computeBoundingSphere();
     r_capsule = geometry.boundingSphere.radius;
@@ -499,19 +508,17 @@ function render() {
 ////////////////////////////////
 function init() {
     'use strict';
-    renderer = new THREE.WebGLRenderer({
-        antialias: true
-    });
+    renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setClearColor(0xFFFFFF);
     document.body.appendChild(renderer.domElement);
 
     createScene();
-    camera1 = createOrthographicCamera(2000, 0, 0, new THREE.Vector3(0, 100, 80));
-    camera2 = createOrthographicCamera(0, 0, 2000, new THREE.Vector3(0, 100, 0));
-    camera3 = createOrthographicCamera(0, 2000, 0, new THREE.Vector3(0, 100, 0));
-    camera4 = createOrthographicCamera(0, 2000, 2000, new THREE.Vector3(0, 100, 0));
-    camera5 = createPerspectiveCamera(-250, 250, 250);
+    camera1 = createOrthographicCamera(500, 0, 0, new THREE.Vector3(0, 0, 0));
+    camera2 = createOrthographicCamera(0, 0, 500, new THREE.Vector3(0, 0, 0));
+    camera3 = createOrthographicCamera(0, 500, 0, new THREE.Vector3(0, 0, 0));
+    camera4 = createOrthographicCamera(300, 300, 300, new THREE.Vector3(0, 0, 0));
+    camera5 = createPerspectiveCamera(300, 300, 300);
 
     camera = camera1;
 
@@ -527,22 +534,27 @@ function init() {
 /////////////////////
 function animate() {
     'use strict';
+    
     var delta_t = clock.getDelta();
     checkCollisions();
     handleCollisions(delta_t);
 
     if (jib.userData.rotatingRight && jib.rotation.y <= MAX_THETA1)
         jib.rotateY(JIB_SPEED * delta_t);
+
     if (jib.userData.rotatingLeft && jib.rotation.y >= MIN_THETA1)
         jib.rotateY(-JIB_SPEED * delta_t);
 
     if (trolley.userData.movingForward && trolley.position.z <= MAX_DELTA1)
         trolley.position.z += TROLLEY_SPEED * delta_t;
+
     if (trolley.userData.movingBackwards && trolley.position.z >= MIN_DELTA1)
         trolley.position.z -= TROLLEY_SPEED * delta_t;
 
     if (block.userData.movingDown && block.position.y >= MIN_DELTA2) {
         block.position.y -= CLAW_BLOCK_SPEED * delta_t;
+
+        // adjust cable position and size according to block movement
         cable_y_offset -= CLAW_BLOCK_SPEED * delta_t;
         trolley.children[CABLE_INDEX].position.y = -(H_CABLE - cable_y_offset)/2 - H_TROLLEY/2;
         trolley.children[CABLE_INDEX].scale.y += CLAW_BLOCK_SPEED * delta_t / H_CABLE;
@@ -550,22 +562,39 @@ function animate() {
 
     if (block.userData.movingUp && block.position.y <= MAX_DELTA2) {
         block.position.y += CLAW_BLOCK_SPEED * delta_t;
+
+        // adjust cable position and size according to block movement
         cable_y_offset += CLAW_BLOCK_SPEED * delta_t;
         trolley.children[CABLE_INDEX].position.y = -(H_CABLE - cable_y_offset)/2 - H_TROLLEY/2;
         trolley.children[CABLE_INDEX].scale.y -= CLAW_BLOCK_SPEED * delta_t / H_CABLE;
     }
 
-    if (block.userData.opening) {
-        block.children[1].rotateX(CLAW_SPEED * delta_t);
-        block.children[2].rotateX(-CLAW_SPEED * delta_t);
-        block.children[3].rotateX(CLAW_SPEED * delta_t);
-        block.children[4].rotateX(CLAW_SPEED * delta_t);
-    }
-    if (block.userData.closing) {
+    // rotations are equal for all children, so one comparison is sufficient
+    if (block.userData.opening && block.children[1].rotation.x <= MAX_THETA2) { 
         block.children[1].rotateX(-CLAW_SPEED * delta_t);
-        block.children[2].rotateX(CLAW_SPEED * delta_t);
+        block.children[2].rotateX(-CLAW_SPEED * delta_t);
         block.children[3].rotateX(-CLAW_SPEED * delta_t);
         block.children[4].rotateX(-CLAW_SPEED * delta_t);
+
+        // adjust claw position for a more realistic opening animation
+        block.children[1].position.z -= CLAW_SPEED * delta_t * Math.cos(CLAW_SPEED * delta_t) * H_CLAW / 2;
+        block.children[2].position.z += CLAW_SPEED * delta_t * Math.cos(CLAW_SPEED * delta_t) * H_CLAW / 2;
+        block.children[3].position.x -= CLAW_SPEED * delta_t * Math.cos(CLAW_SPEED * delta_t) * H_CLAW / 2;
+        block.children[4].position.x += CLAW_SPEED * delta_t * Math.cos(CLAW_SPEED * delta_t) * H_CLAW / 2;
+    }
+
+    // rotations are equal for all children, so one comparison is sufficient
+    if (block.userData.closing && block.children[1].rotation.x >= MIN_THETA2) {
+        block.children[1].rotateX(CLAW_SPEED * delta_t);
+        block.children[2].rotateX(CLAW_SPEED * delta_t);
+        block.children[3].rotateX(CLAW_SPEED * delta_t);
+        block.children[4].rotateX(CLAW_SPEED * delta_t);
+
+        // adjust claw position for a more realistic closing animation
+        block.children[1].position.z += CLAW_SPEED * delta_t * Math.cos(CLAW_SPEED * delta_t) * H_CLAW / 2;
+        block.children[2].position.z -= CLAW_SPEED * delta_t * Math.cos(CLAW_SPEED * delta_t) * H_CLAW / 2;
+        block.children[3].position.x += CLAW_SPEED * delta_t * Math.cos(CLAW_SPEED * delta_t) * H_CLAW / 2;
+        block.children[4].position.x -= CLAW_SPEED * delta_t * Math.cos(CLAW_SPEED * delta_t) * H_CLAW / 2;
     }
     
     render();
@@ -584,7 +613,6 @@ function onResize() {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
     }
-
 }
 
 ///////////////////////
@@ -675,7 +703,6 @@ function onKeyUp(e){
         block.userData.closing = false;
         break;
     }
-
 }
 
 init();

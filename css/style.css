@@ -3,3 +3,32 @@ body {
     background-color: #fff;
     overflow: hidden;
 }
+
+.HUD{
+    background: white; 
+    position: absolute; 
+    width: 420px;
+    left: -5px;
+    padding-left: 15px; 
+    border-radius: 10px;
+    border-style: solid;
+    border-color: black;
+    border-width: 2px;
+    opacity: 70%;
+}
+
+dl, dd {
+    font-family: system-ui;
+    font-size: 13px;
+}
+
+dt {
+    font-family: system-ui;
+    font-size: 14px;
+}
+
+h1 {
+    font-family: system-ui;
+    font-size: 18px;
+    text-align: center;
+}
