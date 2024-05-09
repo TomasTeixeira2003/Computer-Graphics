@@ -22,6 +22,12 @@ var materials = [new THREE.MeshBasicMaterial({ color: 0xbbbbbb, wireframe: true 
                  new THREE.MeshBasicMaterial({ color: 0x74d455, wireframe: true })]
 
 var geometry, mesh;
+var cube, dodecahedron, icosahedron, torus, torusKnot, capsule;
+var r_cube, r_dodecahedron, r_icosahedron, r_torus, r_torusKnot, r_capsule;
+
+var grabbingObject = false;
+
+var grabbedObject;
 
 var jib, block, trolley;
 
@@ -72,6 +78,7 @@ const H_BLOCK = 4;
 
 const W_CLAW = 4;
 const H_CLAW = 10;
+const R_BLOCK = H_CLAW
 
 const JIB_SPEED = 0.8;
 const MAX_THETA1 = Math.PI;
@@ -83,7 +90,7 @@ const MIN_DELTA1 = 3 * W_TROLLEY/2 + W_BASE/2;
 
 const CLAW_BLOCK_SPEED = 30;
 const MAX_DELTA2 = - H_TROLLEY;
-const MIN_DELTA2 = - (0.9 * H_TOWER + H_JIB_CJIB/2 - H_TROLLEY -  2 * H_CLAW);
+const MIN_DELTA2 = - (0.9 * H_TOWER + H_JIB_CJIB/2 - H_TROLLEY -  H_CLAW);
 
 const CLAW_SPEED = 0.5;
 
@@ -269,7 +276,7 @@ function createBlockAndClaw(obj, x, y, z) {
     addClaw(block,  W_BLOCK/2, -H_CLAW/2 - H_BLOCK,      0    , 3*Math.PI/2);
 
     camera6 = createPerspectiveCamera(0, 0, 0);
-    camera6.lookAt(0, -2000, 0);
+    camera6.lookAt(0, -2000, 30);
     block.add(camera6);
 }
 
@@ -367,40 +374,52 @@ function createGrabbables() {
 
     // cube
     geometry = new THREE.BoxGeometry(CUBE_SIDE, CUBE_SIDE, CUBE_SIDE);
-    mesh = new THREE.Mesh(geometry, materials[4]);
-    mesh.position.set(100, CUBE_SIDE/2, 100);
-    scene.add(mesh);
+    cube = new THREE.Mesh(geometry, materials[4]);
+    cube.position.set(100, CUBE_SIDE/2, 100);
+    geometry.computeBoundingSphere();
+    r_cube = geometry.boundingSphere.radius;
+    scene.add(cube);
 
     // dodecahedron
     geometry = new THREE.DodecahedronGeometry(DODECAHEDRON_RADIUS);
-    mesh = new THREE.Mesh(geometry, materials[5]);
-    mesh.position.set(-20, DODECAHEDRON_RADIUS, 120);
-    scene.add(mesh);
+    dodecahedron = new THREE.Mesh(geometry, materials[5]);
+    dodecahedron.position.set(-20, DODECAHEDRON_RADIUS, 120);
+    geometry.computeBoundingSphere();
+    r_dodecahedron = geometry.boundingSphere.radius;
+    scene.add(dodecahedron);
 
     // icosahedron
     geometry = new THREE.IcosahedronGeometry(ICOSAHEDRON_RADIUS);
-    mesh = new THREE.Mesh(geometry, materials[6]);
-    mesh.position.set(20, ICOSAHEDRON_RADIUS, 30);
-    scene.add(mesh);
+    icosahedron = new THREE.Mesh(geometry, materials[6]);
+    icosahedron.position.set(20, ICOSAHEDRON_RADIUS, 30);
+    geometry.computeBoundingSphere();
+    r_icosahedron = geometry.boundingSphere.radius;
+    scene.add(icosahedron);
 
     // torus
     geometry = new THREE.TorusGeometry(TORUS_RADIUS, TORUS_TUBE);
-    mesh = new THREE.Mesh(geometry, materials[7]);
-    mesh.position.set(-100, TORUS_RADIUS + TORUS_TUBE, -140);
-    mesh.rotateY(Math.PI/4);
-    scene.add(mesh);
+    torus = new THREE.Mesh(geometry, materials[7]);
+    torus.position.set(-100, TORUS_RADIUS + TORUS_TUBE, -140);
+    torus.rotateY(Math.PI/4);
+    geometry.computeBoundingSphere();
+    r_torus = geometry.boundingSphere.radius;
+    scene.add(torus);
 
     // torus knot
     geometry = new THREE.TorusKnotGeometry(TORUS_KNOT_RADIUS, TORUS_KNOT_TUBE);
-    mesh = new THREE.Mesh(geometry, materials[8]);
-    mesh.position.set(50, TORUS_KNOT_RADIUS + TORUS_KNOT_TUBE * 4, -80);
-    scene.add(mesh);
+    torusKnot = new THREE.Mesh(geometry, materials[8]);
+    torusKnot.position.set(50, TORUS_KNOT_RADIUS + TORUS_KNOT_TUBE * 4, -80);
+    geometry.computeBoundingSphere();
+    r_torusKnot = geometry.boundingSphere.radius;
+    scene.add(torusKnot);
 
     // capsule
     geometry = new THREE.CapsuleGeometry(CAPSULE_RADIUS, CAPSULE_LENGHT);
-    mesh = new THREE.Mesh(geometry, materials[9]);
-    mesh.position.set(-160, CAPSULE_LENGHT/2 + CAPSULE_RADIUS, 0);
-    scene.add(mesh);
+    capsule = new THREE.Mesh(geometry, materials[9]);
+    capsule.position.set(-160, CAPSULE_LENGHT/2 + CAPSULE_RADIUS, 0);
+    geometry.computeBoundingSphere();
+    r_capsule = geometry.boundingSphere.radius;
+    scene.add(capsule);
 }
 
 //////////////////////
@@ -408,14 +427,54 @@ function createGrabbables() {
 //////////////////////
 function checkCollisions(){
     'use strict';
+    var blockPosition = new THREE.Vector3();
+    block.getWorldPosition(blockPosition);
+    //console.log("Quadrado da soma dos raios: ", Math.pow(R_BLOCK + r_cube, 2));
+    //console.log("Distância quadrada: ", blockPosition.distanceToSquared(cube.position));
+    //console.log("Posição do cubo:", cube.position);
+    //console.log("Posição do bloco:", blockPosition);
+    //console.log("\n\n");
+
+    if (Math.pow(R_BLOCK + r_cube, 2) >  blockPosition.distanceToSquared(cube.position)) {
+        grabbingObject = true;
+        grabbedObject = cube;
+    }
+    if (Math.pow(R_BLOCK + r_dodecahedron, 2) >  blockPosition.distanceToSquared(dodecahedron.position)) {
+        grabbingObject = true;
+        grabbedObject = dodecahedron;
+    }
+    if (Math.pow(R_BLOCK + r_icosahedron, 2) >  blockPosition.distanceToSquared(icosahedron.position)) {
+        grabbingObject = true;
+        grabbedObject = icosahedron;
+    }
+    if (Math.pow(R_BLOCK + r_torus, 2) >  blockPosition.distanceToSquared(torus.position)) {
+        grabbingObject = true;
+        grabbedObject = torus;
+    }
+    if (Math.pow(R_BLOCK + r_torusKnot, 2) >  blockPosition.distanceToSquared(torusKnot.position)) {
+        grabbingObject = true;
+        grabbedObject = torusKnot;
+    }
+    if (Math.pow(R_BLOCK + r_capsule, 2) >  blockPosition.distanceToSquared(capsule.position)) {
+        grabbingObject = true;
+        grabbedObject = capsule;
+    }
 
 }
 
 ///////////////////////
 /* HANDLE COLLISIONS */
 ///////////////////////
-function handleCollisions(){
+function handleCollisions(delta_t) {
     'use strict';
+    if (grabbingObject && block.position.y <= MAX_DELTA2) {
+        block.position.y += CLAW_BLOCK_SPEED * delta_t;
+        cable_y_offset += CLAW_BLOCK_SPEED * delta_t;
+        trolley.children[CABLE_INDEX].position.y = -(H_CABLE - cable_y_offset)/2 - H_TROLLEY/2;
+        trolley.children[CABLE_INDEX].scale.y -= CLAW_BLOCK_SPEED * delta_t / H_CABLE;
+        grabbedObject.position.y += CLAW_BLOCK_SPEED * delta_t;
+    }
+
 
 }
 
@@ -469,6 +528,8 @@ function init() {
 function animate() {
     'use strict';
     var delta_t = clock.getDelta();
+    checkCollisions();
+    handleCollisions(delta_t);
 
     if (jib.userData.rotatingRight && jib.rotation.y <= MAX_THETA1)
         jib.rotateY(JIB_SPEED * delta_t);
