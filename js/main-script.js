@@ -8,7 +8,10 @@ import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 /* GLOBAL VARIABLES */
 //////////////////////
 
-var camera, camera1, camera2, camera3, camera4, camera5, camera6, scene, renderer;
+
+var scene, renderer;
+
+var camera, camera1, camera2, camera3, camera4, camera5, camera6;
 
 var materials = [new THREE.MeshBasicMaterial({ color: 0xbbbbbb, wireframe: true }),
 new THREE.MeshBasicMaterial({ color: 0xffdd00, wireframe: true }),
@@ -23,8 +26,9 @@ new THREE.MeshBasicMaterial({ color: 0xE918BB, wireframe: true }),
 new THREE.MeshBasicMaterial({ color: 0x74d455, wireframe: true })]
 
 var geometry, mesh;
-var cube, dodecahedron, icosahedron, torus, torusKnot, capsule;
-var r_cube, r_dodecahedron, r_icosahedron, r_torus, r_torusKnot, r_capsule, d_grabbedObject;
+
+var objects;
+var d_grabbedObject;
 
 var grabbingObject = false;
 var inPosition = false;
@@ -59,7 +63,7 @@ const ALPHA = 4 * Math.PI / 180;   // rad(4°)
 const BETA = 15 * Math.PI / 180;   // rad(15°)
 
 const L_FRONT_PENDANT = 120;
-const L_BACK_PENDANT = 30;
+const L_REAR_PENDANT = 30;
 
 const W_CABIN = 10;
 const H_CABIN = 15;
@@ -128,16 +132,16 @@ const CABLE_INDEX = 1;          // used while performing cable animation
 /////////////////////
 /* CREATE SCENE(S) */
 /////////////////////
+
 function createScene() {
     'use strict';
 
     scene = new THREE.Scene();
-
     scene.add(new THREE.AxesHelper(100));
 
-    createCrane(scene, 0, 0, 0);
+    createCrane();
     createContainer();
-    createGrabbables();
+    createGrabbableObjects();
 }
 
 //////////////////////
@@ -150,9 +154,7 @@ function createPerspectiveCamera(x, y, z) {
         window.innerWidth / window.innerHeight,
         1,
         1000);
-    camera.position.x = x;
-    camera.position.y = y;
-    camera.position.z = z;
+    camera.position.set(x, y, z);
     camera.lookAt(scene.position);
 
     return camera;
@@ -160,117 +162,119 @@ function createPerspectiveCamera(x, y, z) {
 
 function createOrthographicCamera(x, y, z, target) {
     'use strict';
-    var height = ORTHOGRAPHIC_HEIGHT;
     var ratio = window.innerWidth / window.innerHeight;
-    var camera = new THREE.OrthographicCamera(-height * ratio,
-        height * ratio,
-        height,
-        -height,
+    var camera = new THREE.OrthographicCamera(-ORTHOGRAPHIC_HEIGHT * ratio,
+        ORTHOGRAPHIC_HEIGHT * ratio,
+        ORTHOGRAPHIC_HEIGHT,
+        -ORTHOGRAPHIC_HEIGHT,
         1,
         10000);
-    camera.position.x = x;
-    camera.position.y = y;
-    camera.position.z = z;
+    camera.position.set(x, y, z);
     camera.lookAt(target);
 
     return camera;
 }
 
-/////////////////////
-/* CREATE LIGHT(S) */
-/////////////////////
-
-// NONE
-
 ////////////////////////
 /* CREATE OBJECT3D(S) */
 ////////////////////////
 
-function addCraneBase(obj, x, y, z) {
+function addCraneBase() {
     'use strict';
 
     geometry = new THREE.BoxGeometry(W_BASE, H_BASE, W_BASE);
     mesh = new THREE.Mesh(geometry, materials[0]);
-    mesh.position.set(x, y + H_BASE / 2, z);
-    obj.add(mesh);
+    mesh.position.set(0, H_BASE / 2, 0);
+    scene.add(mesh);
 }
 
-function addCraneTower(obj, x, y, z) {
+function addCraneTower() {
     'use strict';
 
     geometry = new THREE.BoxGeometry(W_TOWER, H_TOWER, W_TOWER);
     mesh = new THREE.Mesh(geometry, materials[1]);
-    mesh.position.set(x, y + H_TOWER / 2 + H_BASE, z);
-    obj.add(mesh);
+    mesh.position.set(0, H_TOWER / 2 + H_BASE, 0);
+    scene.add(mesh);
 }
 
-function addFrontPendant(obj, x, y, z) {
+function addFrontPendant() {
     'use strict';
 
     geometry = new THREE.CylinderGeometry(W_PENDANT / 2, W_PENDANT / 2, L_FRONT_PENDANT);
     mesh = new THREE.Mesh(geometry, materials[0]);
     mesh.rotation.x = -Math.PI / 2 + ALPHA;
-    mesh.position.set(x, y + Math.sin(ALPHA) * L_FRONT_PENDANT / 2 + H_JIB_CJIB / 2, z + W_TOWER / 2 - L_FRONT_PENDANT / 2 + Math.cos(ALPHA) * L_FRONT_PENDANT);
-    obj.add(mesh);
+    mesh.position.set(
+        0,
+        Math.sin(ALPHA) * L_FRONT_PENDANT / 2 + H_JIB_CJIB / 2,
+        W_TOWER / 2 - L_FRONT_PENDANT / 2 + Math.cos(ALPHA) * L_FRONT_PENDANT
+    );
+    jib.add(mesh);
 }
 
-function addRearPendant(obj, x, y, z) {
+function addRearPendant() {
     'use strict';
 
-    geometry = new THREE.CylinderGeometry(W_PENDANT / 2, W_PENDANT / 2, L_BACK_PENDANT);
+    geometry = new THREE.CylinderGeometry(W_PENDANT / 2, W_PENDANT / 2, L_REAR_PENDANT);
     mesh = new THREE.Mesh(geometry, materials[0]);
     mesh.rotation.x = Math.PI / 2 - BETA;
-    mesh.position.set(x, y + Math.sin(BETA) * L_BACK_PENDANT / 2 + H_JIB_CJIB / 2, z - W_TOWER / 2 + L_BACK_PENDANT / 2 - Math.cos(BETA) * L_BACK_PENDANT);
-    obj.add(mesh);
+    mesh.position.set(
+        0,
+        Math.sin(BETA) * L_REAR_PENDANT / 2 + H_JIB_CJIB / 2,
+        - W_TOWER / 2 + L_REAR_PENDANT / 2 - Math.cos(BETA) * L_REAR_PENDANT
+    );
+    jib.add(mesh);
 }
 
-function addCabin(obj, x, y, z) {
+function addCabin() {
     'use strict';
 
     geometry = new THREE.BoxGeometry(W_CABIN, H_CABIN, L_CABIN);
     mesh = new THREE.Mesh(geometry, materials[2]);
-    mesh.position.set(x - W_CABIN / 2 - W_TOWER / 2, y - H_CABIN / 2 - H_JIB_CJIB / 2, z + W_CABIN / 2 - W_TOWER / 2);
-    obj.add(mesh);
+    mesh.position.set(
+        - W_CABIN / 2 - W_TOWER / 2,
+        - H_CABIN / 2 - H_JIB_CJIB / 2,
+        W_CABIN / 2 - W_TOWER / 2
+    );
+    jib.add(mesh);
 }
 
-function addCounterWeight(obj, x, y, z) {
+function addCounterWeight() {
     'use strict';
 
     geometry = new THREE.BoxGeometry(W_CWEIGHT, H_CWEIGHT, W_CWEIGHT);
     mesh = new THREE.Mesh(geometry, materials[2]);
-    mesh.position.set(x, y + H_JIB_CJIB / 2 - H_CWEIGHT / 2 + 2, z - W_TOWER / 2 - L_CWEIGHT - D_CWEIGHT);
-    obj.add(mesh);
+    mesh.position.set(
+        0,
+        H_JIB_CJIB / 2 - H_CWEIGHT / 2 + 2,
+        - W_TOWER / 2 - L_CWEIGHT - D_CWEIGHT
+    );
+    jib.add(mesh);
 }
 
-function addCable(obj, x, y, z) {
+function addCable() {
     geometry = new THREE.CylinderGeometry(W_CABLE / 2, W_CABLE / 2, H_CABLE);
     mesh = new THREE.Mesh(geometry, materials[0]);
-    mesh.position.set(x, y - H_CABLE / 2 - H_TROLLEY / 2, z);
-    obj.add(mesh);
+    mesh.position.set(0, - H_CABLE / 2 - H_TROLLEY / 2, 0);
+    trolley.add(mesh);
 }
 
-function addClaw(obj, x, y, z, rot) {
-    const geometry = new THREE.ConeGeometry(W_CLAW / 2, H_CLAW, 3);
-
+function addClaw(x, y, z, rot) {
+    geometry = new THREE.ConeGeometry(W_CLAW / 2, -H_CLAW, 3);
     mesh = new THREE.Mesh(geometry, materials[0]);
     mesh.rotation.y = rot;
-    mesh.rotation.z = Math.PI;
     mesh.position.set(x, y, z);
 
-    obj.add(mesh);
+    block.add(mesh);
 }
 
-function createBlockAndClaw(obj, x, y, z) {
+function createBlockAndClaw(x, y, z) {
     'use strict';
 
     block = new THREE.Object3D();
     block.userData = { movingDown: false, movingUp: false, closing: false, opening: false }
+    block.position.set(x, y, z);
 
-    block.position.x = x;
-    block.position.y = y;
-    block.position.z = z;
-
-    obj.add(block);
+    trolley.add(block);
 
     geometry = new THREE.BoxGeometry(W_BLOCK, H_BLOCK, W_BLOCK);
     mesh = new THREE.Mesh(geometry, materials[2]);
@@ -279,10 +283,10 @@ function createBlockAndClaw(obj, x, y, z) {
 
     // different angle values are used to rotate the claws so that they are 
     // facing the center of the claw
-    addClaw(block, 0, -H_CLAW / 2 - H_BLOCK, -W_BLOCK / 2, 0);
-    addClaw(block, 0, -H_CLAW / 2 - H_BLOCK, W_BLOCK / 2, Math.PI);
-    addClaw(block, -W_BLOCK / 2, -H_CLAW / 2 - H_BLOCK, 0, Math.PI / 2);
-    addClaw(block, W_BLOCK / 2, -H_CLAW / 2 - H_BLOCK, 0, 3 * Math.PI / 2);
+    addClaw(0, -H_CLAW / 2 - H_BLOCK, -W_BLOCK / 2, 0);
+    addClaw(0, -H_CLAW / 2 - H_BLOCK, W_BLOCK / 2, Math.PI);
+    addClaw(-W_BLOCK / 2, -H_CLAW / 2 - H_BLOCK, 0, Math.PI / 2);
+    addClaw(W_BLOCK / 2, -H_CLAW / 2 - H_BLOCK, 0, 3 * Math.PI / 2);
 
     camera6 = createPerspectiveCamera(0, - H_BLOCK, 0);
     camera6.lookAt(0, -500, 0);
@@ -290,25 +294,22 @@ function createBlockAndClaw(obj, x, y, z) {
     block.add(camera6);
 }
 
-function createTrolley(obj, x, y, z) {
+function createTrolley(x, y, z) {
     'use strict';
 
     trolley = new THREE.Object3D();
     trolley.userData = { movingForward: false, movingBackwards: false };
+    trolley.position.set(x, y, z);
 
-    trolley.position.x = x;
-    trolley.position.y = y;
-    trolley.position.z = z;
-
-    obj.add(trolley);
+    jib.add(trolley);
 
     geometry = new THREE.BoxGeometry(W_TROLLEY, H_TROLLEY, W_TROLLEY);
     mesh = new THREE.Mesh(geometry, materials[2]);
     mesh.position.set(0, 0, 0);
     trolley.add(mesh);
 
-    addCable(trolley, 0, 0, 0);
-    createBlockAndClaw(trolley, 0, - H_CABLE - H_TROLLEY / 2, 0);
+    addCable();
+    createBlockAndClaw(0, - H_CABLE - H_TROLLEY / 2, 0);
 }
 
 function createCraneJib(x, y, z) {
@@ -316,31 +317,28 @@ function createCraneJib(x, y, z) {
 
     jib = new THREE.Object3D();
     jib.userData = { rotatingRight: false, rotatingLeft: false };
+    jib.position.set(x, y, z);
 
     scene.add(jib);
-
-    jib.position.x = x;
-    jib.position.y = y;
-    jib.position.z = z;
 
     geometry = new THREE.BoxGeometry(W_TOWER, H_JIB_CJIB, L_JIB_CJIB);
     mesh = new THREE.Mesh(geometry, materials[1]);
     mesh.position.set(0, 0, W_TOWER / 2 + L_JIB / 2 - L_CJIB / 2);
     jib.add(mesh);
 
-    addFrontPendant(jib, 0, 0, 0);   // Pendant (tirante) 1
-    addRearPendant(jib, 0, 0, 0);    // Pendant (tirante) 2
-    addCabin(jib, 0, 0, 0);
-    addCounterWeight(jib, 0, 0, 0);
+    addFrontPendant();
+    addRearPendant();
+    addCabin();
+    addCounterWeight();
 
-    createTrolley(jib, 0, - H_JIB_CJIB / 2, D_TROLLEY + W_TOWER / 2 + W_TROLLEY / 2);
+    createTrolley(0, - H_JIB_CJIB / 2, D_TROLLEY + W_TOWER / 2 + W_TROLLEY / 2);
 }
 
 function createCrane() {
     'use strict';
 
-    addCraneBase(scene, 0, 0, 0);
-    addCraneTower(scene, 0, 0, 0);
+    addCraneBase();
+    addCraneTower();
 
     createCraneJib(0, H_BASE + 0.9 * H_TOWER + H_JIB_CJIB / 2, 0);
 }
@@ -379,110 +377,96 @@ function createContainer() {
     scene.add(mesh);
 }
 
-function createGrabbables() {
+function createGrabbableObjects() {
     'use strict';
 
     // cube
     geometry = new THREE.BoxGeometry(CUBE_SIDE, CUBE_SIDE, CUBE_SIDE);
-    cube = new THREE.Mesh(geometry, materials[5]);
+    var cube = new THREE.Mesh(geometry, materials[5]);
     cube.position.set(100, CUBE_SIDE / 2, 100);
     geometry.computeBoundingSphere();
-    r_cube = geometry.boundingSphere.radius;
+    var r_cube = geometry.boundingSphere.radius;
     scene.add(cube);
 
     // dodecahedron
     geometry = new THREE.DodecahedronGeometry(DODECAHEDRON_RADIUS);
-    dodecahedron = new THREE.Mesh(geometry, materials[6]);
+    var dodecahedron = new THREE.Mesh(geometry, materials[6]);
     dodecahedron.position.set(-20, DODECAHEDRON_RADIUS, 120);
     geometry.computeBoundingSphere();
-    r_dodecahedron = geometry.boundingSphere.radius;
+    var r_dodecahedron = geometry.boundingSphere.radius;
     scene.add(dodecahedron);
 
     // icosahedron
     geometry = new THREE.IcosahedronGeometry(ICOSAHEDRON_RADIUS);
-    icosahedron = new THREE.Mesh(geometry, materials[7]);
+    var icosahedron = new THREE.Mesh(geometry, materials[7]);
     icosahedron.position.set(20, ICOSAHEDRON_RADIUS, 30);
     geometry.computeBoundingSphere();
-    r_icosahedron = geometry.boundingSphere.radius;
+    var r_icosahedron = geometry.boundingSphere.radius;
     scene.add(icosahedron);
 
     // torus
     geometry = new THREE.TorusGeometry(TORUS_RADIUS, TORUS_TUBE);
-    torus = new THREE.Mesh(geometry, materials[8]);
+    var torus = new THREE.Mesh(geometry, materials[8]);
     torus.position.set(-100, TORUS_RADIUS + TORUS_TUBE, -140);
     torus.rotateY(Math.PI / 4);
     geometry.computeBoundingSphere();
-    r_torus = geometry.boundingSphere.radius;
+    var r_torus = geometry.boundingSphere.radius;
     scene.add(torus);
 
     // torus knot
     geometry = new THREE.TorusKnotGeometry(TORUS_KNOT_RADIUS, TORUS_KNOT_TUBE);
-    torusKnot = new THREE.Mesh(geometry, materials[9]);
+    var torusKnot = new THREE.Mesh(geometry, materials[9]);
     torusKnot.position.set(50, TORUS_KNOT_RADIUS + TORUS_KNOT_TUBE * 4, -80);
     geometry.computeBoundingSphere();
-    r_torusKnot = geometry.boundingSphere.radius;
+    var r_torusKnot = geometry.boundingSphere.radius;
     scene.add(torusKnot);
 
     // capsule
     geometry = new THREE.CapsuleGeometry(CAPSULE_RADIUS, CAPSULE_LENGHT);
-    capsule = new THREE.Mesh(geometry, materials[10]);
+    var capsule = new THREE.Mesh(geometry, materials[10]);
     capsule.position.set(-160, CAPSULE_LENGHT / 2 + CAPSULE_RADIUS, 0);
     geometry.computeBoundingSphere();
-    r_capsule = geometry.boundingSphere.radius;
+    var r_capsule = geometry.boundingSphere.radius;
     scene.add(capsule);
+
+    objects = [
+        { object: cube, radius: r_cube },
+        { object: dodecahedron, radius: r_dodecahedron },
+        { object: icosahedron, radius: r_icosahedron },
+        { object: torus, radius: r_torus },
+        { object: torusKnot, radius: r_torusKnot },
+        { object: capsule, radius: r_capsule }
+    ];   
 }
 
 //////////////////////
 /* CHECK COLLISIONS */
 //////////////////////
+
 function checkCollisions() {
     'use strict';
-    var blockPosition = new THREE.Vector3();
-    block.getWorldPosition(blockPosition);
 
-    if (Math.pow(R_BLOCK + r_cube, 2) > blockPosition.distanceToSquared(cube.position)) {
-        grabbingObject = true;
-        cube.position.set(0, - r_cube - H_BLOCK - H_CLAW / 2, 0);
-        grabbedObject = cube;
-        d_grabbedObject = 2 * r_cube;
+    var blockPosition = new THREE.Vector3();
+    block.getWorldPosition(blockPosition); 
+
+    for (var i = 0; i < objects.length; i++) {
+        var objPosition = objects[i].object.position;
+        if (Math.pow(R_BLOCK + objects[i].radius, 2) > blockPosition.distanceToSquared(objPosition)) {
+            grabbingObject = true;
+            objPosition.set(0, -objects[i].radius - H_BLOCK - H_CLAW / 2, 0);
+            grabbedObject = objects[i].object;
+            d_grabbedObject = 2 * objects[i].radius;
+            block.add(grabbedObject);
+            return; // Exit function if object is grabbed
+        }
     }
-    else if (Math.pow(R_BLOCK + r_dodecahedron, 2) > blockPosition.distanceToSquared(dodecahedron.position)) {
-        grabbingObject = true;
-        dodecahedron.position.set(0, - r_dodecahedron - H_BLOCK - H_CLAW / 2, 0);
-        grabbedObject = dodecahedron;
-        d_grabbedObject = 2 * r_dodecahedron;
-    }
-    else if (Math.pow(R_BLOCK + r_icosahedron, 2) > blockPosition.distanceToSquared(icosahedron.position)) {
-        grabbingObject = true;
-        icosahedron.position.set(0, - r_icosahedron - H_BLOCK - H_CLAW / 2, 0);
-        grabbedObject = icosahedron;
-        d_grabbedObject = 2 * r_icosahedron;
-    }
-    else if (Math.pow(R_BLOCK + r_torus, 2) > blockPosition.distanceToSquared(torus.position)) {
-        grabbingObject = true;
-        torus.position.set(0, - r_torus - H_BLOCK - H_CLAW / 2, 0);
-        grabbedObject = torus;
-        d_grabbedObject = 2 * r_torus;
-    }
-    else if (Math.pow(R_BLOCK + r_torusKnot, 2) > blockPosition.distanceToSquared(torusKnot.position)) {
-        grabbingObject = true;
-        torusKnot.position.set(0, - r_torusKnot - H_BLOCK - H_CLAW / 2, 0);
-        grabbedObject = torusKnot;
-        d_grabbedObject = 2 * r_torusKnot;
-    }
-    else if (Math.pow(R_BLOCK + r_capsule, 2) > blockPosition.distanceToSquared(capsule.position)) {
-        grabbingObject = true;
-        capsule.position.set(0, - r_capsule - H_BLOCK - H_CLAW / 2, 0);
-        grabbedObject = capsule;
-        d_grabbedObject = 2 * r_capsule;
-    }
-    if (grabbingObject)
-        block.add(grabbedObject);
 }
+
 
 ///////////////////////
 /* HANDLE COLLISIONS */
 ///////////////////////
+
 function handleCollisions(delta_t) {
     'use strict';
 
@@ -513,18 +497,12 @@ function handleCollisions(delta_t) {
         block.remove(grabbedObject);
 
     }
-
-
-    // block.position.y = -175
-    // jib_rotation.y = 1
-    // trolley.position.z = 180
-
-    //BLOCK.POSITION.Y = -130
 }
 
 ////////////
 /* UPDATE */
 ////////////
+
 function update() {
     'use strict';
 
@@ -533,6 +511,7 @@ function update() {
 /////////////
 /* DISPLAY */
 /////////////
+
 function render() {
     'use strict';
     renderer.render(scene, camera);
@@ -541,6 +520,7 @@ function render() {
 ////////////////////////////////
 /* INITIALIZE ANIMATION CYCLE */
 ////////////////////////////////
+
 function init() {
     'use strict';
     renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -559,7 +539,6 @@ function init() {
 
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
-    window.addEventListener("resize", onResize);
 
     render();
 }
@@ -606,10 +585,10 @@ function animate() {
 
         // rotations are equal for all children, so one comparison is sufficient
         if (block.userData.opening && block.children[1].rotation.x <= MAX_THETA2) {
-            block.children[1].rotateX(-CLAW_SPEED * delta_t);
-            block.children[2].rotateX(-CLAW_SPEED * delta_t);
-            block.children[3].rotateX(-CLAW_SPEED * delta_t);
-            block.children[4].rotateX(-CLAW_SPEED * delta_t);
+            block.children[1].rotateX(CLAW_SPEED * delta_t);
+            block.children[2].rotateX(CLAW_SPEED * delta_t);
+            block.children[3].rotateX(CLAW_SPEED * delta_t);
+            block.children[4].rotateX(CLAW_SPEED * delta_t);
 
             // adjust claw position for a more realistic opening animation
             block.children[1].position.z -= CLAW_SPEED * delta_t * Math.cos(CLAW_SPEED * delta_t) * H_CLAW / 2;
@@ -620,10 +599,10 @@ function animate() {
 
         // rotations are equal for all children, so one comparison is sufficient
         if (block.userData.closing && block.children[1].rotation.x >= MIN_THETA2) {
-            block.children[1].rotateX(CLAW_SPEED * delta_t);
-            block.children[2].rotateX(CLAW_SPEED * delta_t);
-            block.children[3].rotateX(CLAW_SPEED * delta_t);
-            block.children[4].rotateX(CLAW_SPEED * delta_t);
+            block.children[1].rotateX(-CLAW_SPEED * delta_t);
+            block.children[2].rotateX(-CLAW_SPEED * delta_t);
+            block.children[3].rotateX(-CLAW_SPEED * delta_t);
+            block.children[4].rotateX(-CLAW_SPEED * delta_t);
 
             // adjust claw position for a more realistic closing animation
             block.children[1].position.z += CLAW_SPEED * delta_t * Math.cos(CLAW_SPEED * delta_t) * H_CLAW / 2;
@@ -634,20 +613,6 @@ function animate() {
     }
     render();
     requestAnimationFrame(animate);
-}
-
-////////////////////////////
-/* RESIZE WINDOW CALLBACK */
-////////////////////////////
-function onResize() {
-    'use strict';
-
-    renderer.setSize(window.innerWidth, window.innerHeight);
-
-    if (window.innerHeight > 0 && window.innerWidth > 0) {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-    }
 }
 
 ///////////////////////
