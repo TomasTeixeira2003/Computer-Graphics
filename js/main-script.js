@@ -619,9 +619,9 @@ function init() {
     document.body.appendChild(renderer.domElement);
 
     createScene();
-    camera1 = createOrthographicCamera(500, 0, 0, new THREE.Vector3(0, 0, 0));
-    camera2 = createOrthographicCamera(0, 0, 500, new THREE.Vector3(0, 0, 0));
-    camera3 = createOrthographicCamera(0, 500, 0, new THREE.Vector3(0, 0, 0));
+    camera1 = createOrthographicCamera(250, 0, 0, new THREE.Vector3(0, 0, 0));
+    camera2 = createOrthographicCamera(0, 0, 250, new THREE.Vector3(0, 0, 0));
+    camera3 = createOrthographicCamera(0, 250, 0, new THREE.Vector3(0, 0, 0));
     camera4 = createOrthographicCamera(300, 300, 300, new THREE.Vector3(0, 0, 0));
     camera5 = createPerspectiveCamera(300, 300, 300);
 

@@ -1,34 +1,43 @@
 body {
-    margin: 0px;
+    margin: 0;
     background-color: #fff;
-    overflow: hidden;
+    font-family: monospace;
 }
 
-.HUD{
-    background: white; 
-    position: absolute; 
-    width: 420px;
-    left: -5px;
-    padding-left: 15px; 
-    border-radius: 10px;
-    border-style: solid;
-    border-color: black;
-    border-width: 2px;
-    opacity: 70%;
-}
-
-dl, dd {
-    font-family: system-ui;
-    font-size: 13px;
-}
-
-dt {
-    font-family: system-ui;
-    font-size: 14px;
+.HUD {
+    background-color: #1e1e1e;
+    position: absolute;
+    width: 350px;
+    left: -20px;
+    padding-left: 40px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    padding-right: 20px;
+    border-radius: 20px;
+    opacity: 75%;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    color: #fbfbfb;
 }
 
 h1 {
-    font-family: system-ui;
-    font-size: 18px;
+    font-size: 20px;
     text-align: center;
+    font-weight: bold;
+}
+
+dl {
+    margin-top: 20px;
+}
+
+dt {
+    font-weight: bold;
+    font-size: 16px;
+    margin-top: 15px;
+}
+
+dd {
+    margin-top: 10px;
+    margin-left: 20px;
+    margin-bottom: 10px;
+    font-size: 14px;
 }

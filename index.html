@@ -7,6 +7,7 @@
 	<style>
 		.highlight {
 			font-weight: bold;
+			color: #007acc;
 		}
 	</style>
 	<script type="importmap">
@@ -20,67 +21,58 @@
 </head>
 <body>
 	<script type="module" src="js/main-script.js"></script>
-	<div id="keys" class="HUD">
+	<div class="HUD">
 		<h1><b>HUD</b></h1>
 		<dl>
 			<dt>Câmeras</dt>
-				<dd>1 - Câmera frontal de projeção ortogonal</dd>
-				<dd>2 - Câmera lateral de projeção ortogonal</dd>
-				<dd>3 - Câmera de topo de projeção ortogonal</dd>
-				<dd>4 - Câmera fixa de projeção ortogonal</dd>
-				<dd>5 - Câmera fixa de projeção perspetiva</dd>
-				<dd>6 - Câmera móvel de projeção perspetiva</dd>
-			<br>
+				<dd id="1">1 - Câmera frontal de projeção ortogonal</dd>
+				<dd id="2">2 - Câmera lateral de projeção ortogonal</dd>
+				<dd id="3">3 - Câmera de topo de projeção ortogonal</dd>
+				<dd id="4">4 - Câmera fixa de projeção ortogonal</dd>
+				<dd id="5">5 - Câmera fixa de projeção perspetiva</dd>
+				<dd id="6">6 - Câmera móvel de projeção perspetiva</dd>
 			<dt>Visualização</dt>
-				<dd>7 - Alternar entre modelo de arames e representação sólida</dd>
-			<br>
+				<dd id="7">7 - Representação sólida ligada</dd>
 			<dt>Controlos da grua</dt>
-				<dd>Q - Rodar grua (sentido horário)</dd>
-				<dd>A - Rodar grua (sentido anti-horário)</dd>
-				<dd>W - Deslocar carrinho para a frente</dd>
-				<dd>S - Deslocar carrinho para trás</dd>
-				<dd>E - Subir garra</dd>
-				<dd>D - Descer garra</dd>
-				<dd>R - Abrir garra</dd>
-				<dd>F - Fechar garra</dd>
+				<dd id="Q">Q - Rodar grua (sentido horário)</dd>
+				<dd id="A">A - Rodar grua (sentido anti-horário)</dd>
+				<dd id="W">W - Deslocar carrinho para a frente</dd>
+				<dd id="S">S - Deslocar carrinho para trás</dd>
+				<dd id="E">E - Subir garra</dd>
+				<dd id="D">D - Descer garra</dd>
+				<dd id="R">R - Abrir garra</dd>
+				<dd id="F">F - Fechar garra</dd>
 		</dl>
 	</div> 
 
 	<script>
-		const pressedKeys = new Set();
+		// by default, the app uses camera 1
+		document.getElementById("1").classList.add('highlight');
+		var previousCameraKey = "1";
 
-		document.addEventListener('keydown', function(event) {
-			const key = event.key.toUpperCase();
-			const element = document.getElementById('keys');
-			pressedKeys.add(key);
+        document.addEventListener('keydown', function(event) {
+            const key = event.key.toUpperCase();
+			const cameraKeys = ["1", "2", "3", "4", "5", "6"];
+            
+			if (cameraKeys.includes(key)) {
+				document.getElementById(previousCameraKey).classList.remove('highlight');
+				document.getElementById(key).classList.add('highlight');
+				previousCameraKey = key;
+			} 
+			else if (key === "7")
+				document.getElementById(key).classList.toggle('highlight');
+			else
+				document.getElementById(key).classList.add('highlight');
+        });
 
-			const keys = element.getElementsByTagName('dd');
-			for (let i = 0; i < keys.length; i++) {
-				const text = keys[i].textContent.split('-')[0].trim();
-				if (pressedKeys.has(text)) {
-					keys[i].classList.add('highlight');
-				} else {
-					keys[i].classList.remove('highlight');
-				}
-			}
-		});
-
-		document.addEventListener('keyup', function(event) {
-			const key = event.key.toUpperCase()
-			pressedKeys.delete(key);
-
-			const element = document.getElementById('keys');
-			const keys = element.getElementsByTagName('dd');
-			for (let i = 0; i < keys.length; i++) {
-				const text = keys[i].textContent.split('-')[0].trim();
-				if (pressedKeys.has(text)) {
-					keys[i].classList.add('highlight');
-				} else {
-					keys[i].classList.remove('highlight');
-				}
-			}
-		});
-	</script>
+        document.addEventListener('keyup', function(event) {
+            const key = event.key.toUpperCase();
+			const controlKeys = ["Q", "A", "W", "S", "E", "D", "R", "F"];
+            
+			if (controlKeys.includes(key))
+        		document.getElementById(key).classList.remove('highlight');
+        });
+    </script>
 </body>
 </html>
 
