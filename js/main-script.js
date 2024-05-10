@@ -8,9 +8,7 @@ import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 /* GLOBAL VARIABLES */
 //////////////////////
 
-
 var scene, renderer;
-
 var camera, camera1, camera2, camera3, camera4, camera5, camera6;
 
 var materials = [new THREE.MeshBasicMaterial({ color: 0xbbbbbb, wireframe: true }),
@@ -25,98 +23,112 @@ new THREE.MeshBasicMaterial({ color: 0x179799, wireframe: true }),
 new THREE.MeshBasicMaterial({ color: 0xE918BB, wireframe: true }),
 new THREE.MeshBasicMaterial({ color: 0x74d455, wireframe: true })]
 
-var geometry, mesh;
+// object3D(s)
+var crane, jib, block, trolley;
 
-var objects;
-var d_grabbedObject;
-
+// grabbable objects
+var objects
+var grabbedObject;
+var h_grabbedObject;
 var grabbingObject = false;
 var inPosition = false;
 
-var grabbedObject;
-
-var jib, block, trolley;
-
-var cable_y_offset = 0;
-
+// clock
 var clock = new THREE.Clock();
+var delta_t;
+
+var geometry, mesh;
+var cable_y_offset = 0;
 
 ///////////////
 /* CONSTANTS */
 ///////////////
 
-const ORTHOGRAPHIC_HEIGHT = 250;
+const ORTHOGRAPHIC_HEIGHT = 300;
 
+// base
 const H_BASE = 10;
 const W_BASE = 20;
 
+// tower
 const H_TOWER = 220;
 const W_TOWER = 10;
 
+// jib and counter-jib
 const H_JIB_CJIB = 10;
-const L_CJIB = 50;                            // l_clança
-const L_JIB = 180;                            // l_lança
-const L_JIB_CJIB = L_CJIB + W_TOWER + L_JIB;  // l_clança + w_torre + l_lança
+const L_CJIB = 50;
+const L_JIB = 180;
+const L_JIB_CJIB = L_CJIB + W_TOWER + L_JIB; // jib length + counter-jib length
 
+// pendants
 const W_PENDANT = 1;
+const L_FRONT_PENDANT = 120;
+const L_REAR_PENDANT = 30;
 const ALPHA = 4 * Math.PI / 180;   // rad(4°)
 const BETA = 15 * Math.PI / 180;   // rad(15°)
 
-const L_FRONT_PENDANT = 120;
-const L_REAR_PENDANT = 30;
-
+// cabin
 const W_CABIN = 10;
 const H_CABIN = 15;
 const L_CABIN = 20;
 
+// counterweight
 const W_CWEIGHT = 12;
 const H_CWEIGHT = 20;
 const L_CWEIGHT = 10;
-const D_CWEIGHT = 25;
+const D_CWEIGHT = 25; // distance between the tower and the counterweight
 
+// trolley
 const W_TROLLEY = 12;
 const H_TROLLEY = 5;
 const D_TROLLEY = 80;
+const CABLE_INDEX = 1; // used while performing cable animation
 
+// cable
 const W_CABLE = W_PENDANT;
 const H_CABLE = 50;
 
+// claw block
 const W_BLOCK = 8;
 const H_BLOCK = 4;
 
+// claws
 const W_CLAW = 4;
 const H_CLAW = 10;
 const R_BLOCK = H_CLAW
 
+// jib rotation
 const JIB_SPEED = 0.8;
 const MAX_THETA1 = Math.PI;
 const MIN_THETA1 = - Math.PI;
 
+// trolley movement
 const TROLLEY_SPEED = 20;
 const MAX_DELTA1 = L_JIB;
 const MIN_DELTA1 = 3 * W_TROLLEY / 2 + W_BASE / 2;
 
+// claw block momevemt
 const CLAW_BLOCK_SPEED = 30;
 const MAX_DELTA2 = - H_TROLLEY;
 const MIN_DELTA2 = - (0.9 * H_TOWER + H_JIB_CJIB / 2 - H_TROLLEY - H_CLAW);
 
+// claws movement and rotation
+const CLAW_SPEED = 0.5;
 const MAX_THETA2 = Math.PI / 6;
 const MIN_THETA2 = -Math.PI / 8;
 
-const CLAW_SPEED = 0.5;
-
+// container 
 const W_CONTAINER_BASE = 50;
 const H_CONTAINER_BASE = 5;
 const L_CONTAINER_BASE = 80;
-
 const W_CONTAINER_SIDE = H_CONTAINER_BASE;
 const H_CONTAINER_SIDE = W_CONTAINER_BASE;
 const L_CONTAINER_SIDE = L_CONTAINER_BASE;
-
 const W_CONTAINER_FRONT = W_CONTAINER_BASE;
 const H_CONTAINER_FRONT = W_CONTAINER_BASE;
 const L_CONTAINER_FRONT = H_CONTAINER_BASE;
 
+// grabble objects
 const CUBE_SIDE = 15;
 const DODECAHEDRON_RADIUS = 10;
 const ICOSAHEDRON_RADIUS = 8;
@@ -127,7 +139,9 @@ const TORUS_KNOT_TUBE = 2;
 const CAPSULE_RADIUS = 8;
 const CAPSULE_LENGHT = 4;
 
-const CABLE_INDEX = 1;          // used while performing cable animation
+// grabbing animation
+const RAISING_HEIGHT = -135;
+const LOWERING_HEIGHT = -185;
 
 /////////////////////
 /* CREATE SCENE(S) */
@@ -150,7 +164,7 @@ function createScene() {
 
 function createPerspectiveCamera(x, y, z) {
     'use strict';
-    var camera = new THREE.PerspectiveCamera(60,
+    var camera = new THREE.PerspectiveCamera(70,
         window.innerWidth / window.innerHeight,
         1,
         1000);
@@ -185,7 +199,7 @@ function addCraneBase() {
     geometry = new THREE.BoxGeometry(W_BASE, H_BASE, W_BASE);
     mesh = new THREE.Mesh(geometry, materials[0]);
     mesh.position.set(0, H_BASE / 2, 0);
-    scene.add(mesh);
+    crane.add(mesh);
 }
 
 function addCraneTower() {
@@ -194,7 +208,7 @@ function addCraneTower() {
     geometry = new THREE.BoxGeometry(W_TOWER, H_TOWER, W_TOWER);
     mesh = new THREE.Mesh(geometry, materials[1]);
     mesh.position.set(0, H_TOWER / 2 + H_BASE, 0);
-    scene.add(mesh);
+    crane.add(mesh);
 }
 
 function addFrontPendant() {
@@ -319,7 +333,7 @@ function createCraneJib(x, y, z) {
     jib.userData = { rotatingRight: false, rotatingLeft: false };
     jib.position.set(x, y, z);
 
-    scene.add(jib);
+    crane.add(jib);
 
     geometry = new THREE.BoxGeometry(W_TOWER, H_JIB_CJIB, L_JIB_CJIB);
     mesh = new THREE.Mesh(geometry, materials[1]);
@@ -336,6 +350,10 @@ function createCraneJib(x, y, z) {
 
 function createCrane() {
     'use strict';
+    crane = new THREE.Object3D();
+    crane.position.set(0, 0, 0);
+    
+    scene.add(crane);
 
     addCraneBase();
     addCraneTower();
@@ -445,6 +463,8 @@ function createGrabbableObjects() {
 
 function checkCollisions() {
     'use strict';
+    if (grabbingObject)
+        return;
 
     var blockPosition = new THREE.Vector3();
     block.getWorldPosition(blockPosition); 
@@ -453,49 +473,56 @@ function checkCollisions() {
         var objPosition = objects[i].object.position;
         if (Math.pow(R_BLOCK + objects[i].radius, 2) > blockPosition.distanceToSquared(objPosition)) {
             grabbingObject = true;
-            objPosition.set(0, -objects[i].radius - H_BLOCK - H_CLAW / 2, 0);
             grabbedObject = objects[i].object;
-            d_grabbedObject = 2 * objects[i].radius;
+            objPosition.set(0, -objects[i].radius - H_BLOCK - H_CLAW / 2, 0);
+            h_grabbedObject = 2 * objects[i].radius;
             block.add(grabbedObject);
-            return; // Exit function if object is grabbed
+            return;
         }
     }
 }
-
 
 ///////////////////////
 /* HANDLE COLLISIONS */
 ///////////////////////
 
-function handleCollisions(delta_t) {
+function handleCollisions() {
     'use strict';
+    if (!grabbingObject)
+        return;
+    var rotateRight = jib.rotation.y > 1 + JIB_SPEED * delta_t;
+    var rotateLeft = jib.rotation.y < 1 - JIB_SPEED * delta_t;
 
-    if (grabbingObject && block.position.y <= -135 + d_grabbedObject && !inPosition) {
+    // raises object
+    if (block.position.y < RAISING_HEIGHT + h_grabbedObject && !inPosition) {
         block.position.y += CLAW_BLOCK_SPEED * delta_t;
         cable_y_offset += CLAW_BLOCK_SPEED * delta_t;
         trolley.children[CABLE_INDEX].position.y = -(H_CABLE - cable_y_offset) / 2 - H_TROLLEY / 2;
         trolley.children[CABLE_INDEX].scale.y -= CLAW_BLOCK_SPEED * delta_t / H_CABLE;
     }
-    else if (jib.rotation.y > 1 + JIB_SPEED * delta_t || jib.rotation.y < 1 - JIB_SPEED * delta_t || trolley.position.z <= 180) {
-        if (grabbingObject && MIN_THETA1 < jib.rotation.y && jib.rotation.y < 1 - JIB_SPEED * delta_t)
+    // jib and trolley get int the right position
+    else if (rotateRight || rotateLeft || trolley.position.z < MAX_DELTA1) {
+        
+        if (rotateLeft && MIN_THETA1 < jib.rotation.y)
             jib.rotation.y += JIB_SPEED * delta_t;
-        else if (grabbingObject && 1 + JIB_SPEED * delta_t < jib.rotation.y && jib.rotation.y < MAX_THETA1)
+        if (rotateRight && jib.rotation.y < MAX_THETA1)
             jib.rotation.y -= JIB_SPEED * delta_t;
-        if (grabbingObject && trolley.position.z <= 180)
+        if (trolley.position.z < MAX_DELTA1)
             trolley.position.z += TROLLEY_SPEED * delta_t;
     }
-    else if (grabbingObject && block.position.y >= -185 + d_grabbedObject) {
+
+    // lowers object
+    else if (block.position.y > LOWERING_HEIGHT + h_grabbedObject) {
         inPosition = true;
         block.position.y -= CLAW_BLOCK_SPEED * delta_t;
         cable_y_offset -= CLAW_BLOCK_SPEED * delta_t;
         trolley.children[CABLE_INDEX].position.y = -(H_CABLE - cable_y_offset) / 2 - H_TROLLEY / 2;
         trolley.children[CABLE_INDEX].scale.y += CLAW_BLOCK_SPEED * delta_t / H_CABLE;
     }
-    else if (grabbingObject) {
+    else {
         grabbingObject = false;
         inPosition = false;
         block.remove(grabbedObject);
-
     }
 }
 
@@ -506,6 +533,69 @@ function handleCollisions(delta_t) {
 function update() {
     'use strict';
 
+    checkCollisions();
+    handleCollisions();
+
+    if (grabbingObject)
+        return;
+
+    // jib rotation
+    if (jib.userData.rotatingRight && jib.rotation.y < MAX_THETA1)
+        jib.rotation.y += JIB_SPEED * delta_t;
+    if (jib.userData.rotatingLeft && jib.rotation.y > MIN_THETA1)
+        jib.rotation.y -= JIB_SPEED * delta_t;
+    
+    // trolley movement
+    if (trolley.userData.movingForward && trolley.position.z < MAX_DELTA1)
+        trolley.position.z += TROLLEY_SPEED * delta_t;
+    if (trolley.userData.movingBackwards && trolley.position.z > MIN_DELTA1)
+        trolley.position.z -= TROLLEY_SPEED * delta_t;
+
+    // block movement
+    if (block.userData.movingDown && block.position.y > MIN_DELTA2) {
+        block.position.y -= CLAW_BLOCK_SPEED * delta_t;
+        // adjust cable position and size accordingly
+        cable_y_offset -= CLAW_BLOCK_SPEED * delta_t;
+        trolley.children[CABLE_INDEX].position.y = -(H_CABLE - cable_y_offset) / 2 - H_TROLLEY / 2;
+        trolley.children[CABLE_INDEX].scale.y += CLAW_BLOCK_SPEED * delta_t / H_CABLE;
+    }
+    if (block.userData.movingUp && block.position.y < MAX_DELTA2) {
+        block.position.y += CLAW_BLOCK_SPEED * delta_t;
+        // adjust cable position and size accordingly
+        cable_y_offset += CLAW_BLOCK_SPEED * delta_t;
+        trolley.children[CABLE_INDEX].position.y = -(H_CABLE - cable_y_offset) / 2 - H_TROLLEY / 2;
+        trolley.children[CABLE_INDEX].scale.y -= CLAW_BLOCK_SPEED * delta_t / H_CABLE;
+    }
+
+    // rotations are equal for all claws, so one comparison is sufficient        
+    if (block.userData.opening && block.children[1].rotation.x < MAX_THETA2) {
+        block.children[1].rotateX(CLAW_SPEED * delta_t);
+        block.children[2].rotateX(CLAW_SPEED * delta_t);
+        block.children[3].rotateX(CLAW_SPEED * delta_t);
+        block.children[4].rotateX(CLAW_SPEED * delta_t);
+
+        // adjust claw position for a more realistic opening animation
+        var claw_movement = CLAW_SPEED * delta_t * Math.cos(CLAW_SPEED * delta_t) * H_CLAW / 2;
+        block.children[1].position.z -= claw_movement;
+        block.children[2].position.z += claw_movement;
+        block.children[3].position.x -= claw_movement;
+        block.children[4].position.x += claw_movement;
+    }
+
+    // rotations are equal for all claws, so one comparison is sufficient
+    if (block.userData.closing && block.children[1].rotation.x > MIN_THETA2) {
+        block.children[1].rotateX(-CLAW_SPEED * delta_t);
+        block.children[2].rotateX(-CLAW_SPEED * delta_t);
+        block.children[3].rotateX(-CLAW_SPEED * delta_t);
+        block.children[4].rotateX(-CLAW_SPEED * delta_t);
+
+        // adjust claw position for a more realistic closing animation
+        var claw_movement = CLAW_SPEED * delta_t * Math.cos(CLAW_SPEED * delta_t) * H_CLAW / 2;
+        block.children[1].position.z += claw_movement;
+        block.children[2].position.z -= claw_movement;
+        block.children[3].position.x += claw_movement;
+        block.children[4].position.x -= claw_movement;
+    }
 }
 
 /////////////
@@ -546,71 +636,11 @@ function init() {
 /////////////////////
 /* ANIMATION CYCLE */
 /////////////////////
+
 function animate() {
     'use strict';
-
-    var delta_t = clock.getDelta();
-    if (!grabbingObject)
-        checkCollisions();
-    handleCollisions(delta_t);
-    if (!grabbingObject) {
-        if (jib.userData.rotatingRight && jib.rotation.y <= MAX_THETA1)
-            jib.rotation.y += JIB_SPEED * delta_t;
-        if (jib.userData.rotatingLeft && jib.rotation.y >= MIN_THETA1)
-            jib.rotation.y -= JIB_SPEED * delta_t;
-
-        if (trolley.userData.movingForward && trolley.position.z <= MAX_DELTA1)
-            trolley.position.z += TROLLEY_SPEED * delta_t;
-
-        if (trolley.userData.movingBackwards && trolley.position.z >= MIN_DELTA1)
-            trolley.position.z -= TROLLEY_SPEED * delta_t;
-
-        if (block.userData.movingDown && block.position.y >= MIN_DELTA2) {
-            block.position.y -= CLAW_BLOCK_SPEED * delta_t;
-
-            // adjust cable position and size according to block movement
-            cable_y_offset -= CLAW_BLOCK_SPEED * delta_t;
-            trolley.children[CABLE_INDEX].position.y = -(H_CABLE - cable_y_offset) / 2 - H_TROLLEY / 2;
-            trolley.children[CABLE_INDEX].scale.y += CLAW_BLOCK_SPEED * delta_t / H_CABLE;
-        }
-
-        if (block.userData.movingUp && block.position.y <= MAX_DELTA2) {
-            block.position.y += CLAW_BLOCK_SPEED * delta_t;
-
-            // adjust cable position and size according to block movement
-            cable_y_offset += CLAW_BLOCK_SPEED * delta_t;
-            trolley.children[CABLE_INDEX].position.y = -(H_CABLE - cable_y_offset) / 2 - H_TROLLEY / 2;
-            trolley.children[CABLE_INDEX].scale.y -= CLAW_BLOCK_SPEED * delta_t / H_CABLE;
-        }
-
-        // rotations are equal for all children, so one comparison is sufficient
-        if (block.userData.opening && block.children[1].rotation.x <= MAX_THETA2) {
-            block.children[1].rotateX(CLAW_SPEED * delta_t);
-            block.children[2].rotateX(CLAW_SPEED * delta_t);
-            block.children[3].rotateX(CLAW_SPEED * delta_t);
-            block.children[4].rotateX(CLAW_SPEED * delta_t);
-
-            // adjust claw position for a more realistic opening animation
-            block.children[1].position.z -= CLAW_SPEED * delta_t * Math.cos(CLAW_SPEED * delta_t) * H_CLAW / 2;
-            block.children[2].position.z += CLAW_SPEED * delta_t * Math.cos(CLAW_SPEED * delta_t) * H_CLAW / 2;
-            block.children[3].position.x -= CLAW_SPEED * delta_t * Math.cos(CLAW_SPEED * delta_t) * H_CLAW / 2;
-            block.children[4].position.x += CLAW_SPEED * delta_t * Math.cos(CLAW_SPEED * delta_t) * H_CLAW / 2;
-        }
-
-        // rotations are equal for all children, so one comparison is sufficient
-        if (block.userData.closing && block.children[1].rotation.x >= MIN_THETA2) {
-            block.children[1].rotateX(-CLAW_SPEED * delta_t);
-            block.children[2].rotateX(-CLAW_SPEED * delta_t);
-            block.children[3].rotateX(-CLAW_SPEED * delta_t);
-            block.children[4].rotateX(-CLAW_SPEED * delta_t);
-
-            // adjust claw position for a more realistic closing animation
-            block.children[1].position.z += CLAW_SPEED * delta_t * Math.cos(CLAW_SPEED * delta_t) * H_CLAW / 2;
-            block.children[2].position.z -= CLAW_SPEED * delta_t * Math.cos(CLAW_SPEED * delta_t) * H_CLAW / 2;
-            block.children[3].position.x += CLAW_SPEED * delta_t * Math.cos(CLAW_SPEED * delta_t) * H_CLAW / 2;
-            block.children[4].position.x -= CLAW_SPEED * delta_t * Math.cos(CLAW_SPEED * delta_t) * H_CLAW / 2;
-        }
-    }
+    delta_t = clock.getDelta();
+    update();
     render();
     requestAnimationFrame(animate);
 }
@@ -618,6 +648,7 @@ function animate() {
 ///////////////////////
 /* KEY DOWN CALLBACK */
 ///////////////////////
+
 function onKeyDown(e) {
     'use strict';
 
@@ -674,15 +705,16 @@ function onKeyDown(e) {
 ///////////////////////
 /* KEY UP CALLBACK */
 ///////////////////////
+
 function onKeyUp(e) {
     'use strict';
 
     switch (e.keyCode) {
-        case 65: //A
-            jib.userData.rotatingRight = false;
-            break;
         case 81: //Q
             jib.userData.rotatingLeft = false;
+            break;
+        case 65: //A
+            jib.userData.rotatingRight = false;
             break;
         case 87: //W
             trolley.userData.movingForward = false;
