@@ -36,7 +36,11 @@ const ORING_SURFACES_RADIUS = ORING_IRADIUS + RING_WIDTH/2;
 
 const RING_NUMBER = 3;
 const SURFACE_NUMBER = 8;
+
+// speeds
 const SURFACE_SPEED = 2;
+const CYLINDER_SPEED = 0.1;
+const RING_SPEED = 10;
 
 const extrudeSettings = {
 	steps: 2,
@@ -65,6 +69,10 @@ var materials = [new THREE.MeshLambertMaterial(),
     
 // object3D(s)
 var carousel, cylinder, innerRing, middleRing, outerRing;
+var innerRing = new THREE.Object3D();
+var middleRing = new THREE.Object3D();
+var outerRing = new THREE.Object3D();
+
 var rings = [
     { object: innerRing, innerRadius: IRING_IRADIUS, outerRadius: IRING_ORADIUS, surfaces: [], rSurfaces: IRING_SURFACES_RADIUS },
     { object: middleRing, innerRadius: MRING_IRADIUS, outerRadius: MRING_ORADIUS, surfaces: [], rSurfaces: MRING_SURFACES_RADIUS },
@@ -131,11 +139,12 @@ function createSurfaces(ring) {
     }
 }
 
-function createRing(ring) {
+function createRing(ring, initial_height) {
     'use strict';
 
-    ring.object = new THREE.Object3D();
-    ring.object.position.set(0, 0, 0);
+    ring.object.userData = { moving: false, direction: 1 };
+    ring.object.position.set(0, initial_height, 0);
+    
 
     cylinder.add(ring.object);
 
@@ -161,7 +170,7 @@ function createCenterCylinder() {
     cylinder.add(mesh);
 
     for (var ringIndex = 0; ringIndex < RING_NUMBER; ringIndex++)
-        createRing(rings[ringIndex]);
+        createRing(rings[ringIndex], RING_HEIGHT * ringIndex);
 }
 
 function createCarousel() {
@@ -194,9 +203,25 @@ function createSkydome() {
 ////////////
 function update(){
     'use strict';
-    for (var ringIndex = 0; ringIndex < RING_NUMBER; ringIndex++)
+    for (var ringIndex = 0; ringIndex < RING_NUMBER; ringIndex++) {
+
+        // rotate surfaces
         for (var surfaceIndex = 0; surfaceIndex < SURFACE_NUMBER; surfaceIndex++)
             rings[ringIndex].surfaces[surfaceIndex].rotateY(SURFACE_SPEED * delta_t);
+        
+        // move rings
+        var ring = rings[ringIndex].object
+        if (ring.userData.moving) {
+            ring.position.y += ring.userData.direction * RING_SPEED * delta_t;
+
+            // change direction
+            if (ring.position.y < 0 || ring.position.y > CYLINDER_HEIGHT - RING_HEIGHT)
+                ring.userData.direction = -ring.userData.direction; 
+            
+        }
+    }
+    
+    cylinder.rotateY(CYLINDER_SPEED * delta_t);
 }
 
 /////////////
@@ -219,6 +244,9 @@ function init() {
 
     createScene();
     camera = createPrespectiveCamera(150, 150, 150);
+
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
 }
 
 /////////////////////
@@ -247,6 +275,17 @@ function onResize() {
 function onKeyDown(e) {
     'use strict';
 
+    switch (e.keyCode) {
+        case 49: //1
+            innerRing.userData.moving = true;
+            break;
+        case 50: //2
+            middleRing.userData.moving = true;
+            break;
+        case 51: //3
+            outerRing.userData.moving = true;
+            break;
+    }
 }
 
 ///////////////////////
@@ -254,6 +293,18 @@ function onKeyDown(e) {
 ///////////////////////
 function onKeyUp(e){
     'use strict';
+
+    switch (e.keyCode) {
+        case 49: //1
+            innerRing.userData.moving = false;
+            break;
+        case 50: //2
+            middleRing.userData.moving = false;
+            break;
+        case 51: //3
+            outerRing.userData.moving = false;
+            break;
+    }
 }
 
 init();
