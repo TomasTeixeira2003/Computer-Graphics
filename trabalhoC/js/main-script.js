@@ -4,27 +4,6 @@ import { VRButton } from 'three/addons/webxr/VRButton.js';
 import * as Stats from 'three/addons/libs/stats.module.js';
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 
-//////////////////////
-/* GLOBAL VARIABLES */
-//////////////////////
-var scene, renderer, camera, camera1, camera2;
-
-var geometry, mesh, material;
-var materials = [new THREE.MeshBasicMaterial({ color: 0xbbbbbb, wireframe: true }),
-    new THREE.MeshBasicMaterial({ color: 0xffdd00, wireframe: true }),
-    new THREE.MeshBasicMaterial({ color: 0xffaa00, wireframe: true }),
-    new THREE.MeshBasicMaterial({ color: 0x4d4dff, wireframe: true }),
-    new THREE.MeshBasicMaterial({ color: 0x2d2d9c, wireframe: true }),
-    new THREE.MeshBasicMaterial({ color: 0xD2042D, wireframe: true }),
-    new THREE.MeshBasicMaterial({ color: 0x660f56, wireframe: true }),
-    new THREE.MeshBasicMaterial({ color: 0x295e11, wireframe: true }),
-    new THREE.MeshBasicMaterial({ color: 0x179799, wireframe: true }),
-    new THREE.MeshBasicMaterial({ color: 0xE918BB, wireframe: true }),
-    new THREE.MeshBasicMaterial({ color: 0x74d455, wireframe: true })]
-    
-// object3D(s)
-var carousel, cylinder, innerRing, middleRing, outterRing;
-
 ///////////////
 /* CONSTANTS */
 ///////////////
@@ -39,18 +18,25 @@ const SKYDOME_THETA_START = 0;
 const SKYDOME_THETA_LENGHT = 1.64619455048105;
 
 // cylinder
-const R_CYLINDER = 20;
-const H_CYLINDER = 100;
+const CYLINDER_RADIUS = 20;
+const CYLINDER_HEIGHT = 30;
 
 // rings
-const H_RING = 10;
+const RING_HEIGHT = CYLINDER_HEIGHT/3;
 const RING_WIDTH = 30;
-const INNER_RING_IRADIUS = R_CYLINDER;
-const INNER_RING_ORADIUS = INNER_RING_IRADIUS + RING_WIDTH;
-const MIDDLE_RING_IRADIUS = INNER_RING_ORADIUS;
-const MIDDLE_RING_ORADIUS = MIDDLE_RING_IRADIUS + RING_WIDTH;
-const OUTTER_RING_IRADIUS = MIDDLE_RING_ORADIUS;
-const OUTTER_RING_ORADIUS = OUTTER_RING_IRADIUS + RING_WIDTH;
+const IRING_IRADIUS = CYLINDER_RADIUS;
+const IRING_ORADIUS = IRING_IRADIUS + RING_WIDTH;
+const IRING_SURFACES_RADIUS = IRING_IRADIUS + RING_WIDTH/2;
+const MRING_IRADIUS = IRING_ORADIUS;
+const MRING_ORADIUS = MRING_IRADIUS + RING_WIDTH;
+const MRING_SURFACES_RADIUS = MRING_IRADIUS + RING_WIDTH/2;
+const ORING_IRADIUS = MRING_ORADIUS;
+const ORING_ORADIUS = ORING_IRADIUS + RING_WIDTH;
+const ORING_SURFACES_RADIUS = ORING_IRADIUS + RING_WIDTH/2;
+
+const RING_NUMBER = 3;
+const SURFACE_NUMBER = 8;
+const SURFACE_SPEED = 2;
 
 const extrudeSettings = {
 	steps: 2,
@@ -61,6 +47,35 @@ const extrudeSettings = {
 	bevelOffset: 0,
 	bevelSegments: 1
 };
+
+//////////////////////
+/* GLOBAL VARIABLES */
+//////////////////////
+var scene, renderer, camera, camera1, camera2;
+
+// TODO: colours
+var materials = [new THREE.MeshLambertMaterial(),
+    new THREE.MeshPhongMaterial(),
+    new THREE.MeshToonMaterial(),
+    new THREE.MeshNormalMaterial(),
+    new THREE.MeshBasicMaterial({color: 0xFF2222 }),
+    new THREE.MeshBasicMaterial({color: 0x22FF22, wireframe: true}),
+    new THREE.MeshBasicMaterial({color: 0x2222FF }),
+    new THREE.MeshBasicMaterial({color: 0x22FFFF })]
+    
+// object3D(s)
+var carousel, cylinder, innerRing, middleRing, outerRing;
+var rings = [
+    { object: innerRing, innerRadius: IRING_IRADIUS, outerRadius: IRING_ORADIUS, surfaces: [], rSurfaces: IRING_SURFACES_RADIUS },
+    { object: middleRing, innerRadius: MRING_IRADIUS, outerRadius: MRING_ORADIUS, surfaces: [], rSurfaces: MRING_SURFACES_RADIUS },
+    { object: outerRing, innerRadius: ORING_IRADIUS, outerRadius: ORING_ORADIUS, surfaces: [], rSurfaces: ORING_SURFACES_RADIUS },
+];
+
+// clock
+var clock = new THREE.Clock();
+var delta_t;
+
+var geometry, mesh;
 
 /////////////////////
 /* CREATE SCENE(S) */
@@ -97,22 +112,39 @@ function createPrespectiveCamera(x, y, z) {
 ////////////////////////
 /* CREATE OBJECT3D(S) */
 ////////////////////////
-function createRing(ring, innerRadius, outterRadius) {
+function createSurfaces(ring) {
+    for (var i = 0; i < 8; i++) {        
+        ring.surfaces[i] = new THREE.Object3D();
+        ring.surfaces[i].position.set(
+            ring.rSurfaces * Math.cos(i * Math.PI / 4),
+            RING_HEIGHT, // TODO: add surface height/2
+            ring.rSurfaces * Math.sin(i * Math.PI / 4)
+        );
+        ring.object.add(ring.surfaces[i]);
+        
+        // TODO: parametric surfaces
+        geometry = new THREE.BoxGeometry(10, 10, 10);
+        geometry.computeBoundingSphere();
+        mesh = new THREE.Mesh(geometry, materials[4]);
+        mesh.position.set(0, 0, 0);
+        ring.surfaces[i].add(mesh);
+    }
+}
+
+function createRing(ring) {
     'use strict';
 
-    ring = new THREE.Object3D();
-    ring.position.set(0, 0, 0);
+    ring.object = new THREE.Object3D();
+    ring.object.position.set(0, 0, 0);
 
-    cylinder.add(ring);
+    cylinder.add(ring.object);
 
-    geometry = new THREE.RingGeometry(innerRadius, outterRadius, 32);
-    mesh = new THREE.Mesh(geometry, materials[0]);
+    geometry = new THREE.RingGeometry(ring.innerRadius, ring.outerRadius, 32);
+    mesh = new THREE.Mesh(geometry, materials[5]);
     mesh.position.set(0, 0, 0);
     mesh.rotation.x = Math.PI/2;
-    ring.add(mesh);
-    // for (var i = 0; i < objects.length; i++) {
-    //     addObjectToRing(ring, objects[i]);
-    // }
+    ring.object.add(mesh);
+    createSurfaces(ring);
 }
 
 function createCenterCylinder() {
@@ -123,14 +155,13 @@ function createCenterCylinder() {
 
     carousel.add(cylinder);
     
-    geometry = new THREE.CylinderGeometry(R_CYLINDER, R_CYLINDER, H_CYLINDER);
-    mesh = new THREE.Mesh(geometry, materials[1]);
-    mesh.position.set(0, H_CYLINDER/2, 0);
+    geometry = new THREE.CylinderGeometry(CYLINDER_RADIUS, CYLINDER_RADIUS, CYLINDER_HEIGHT);
+    mesh = new THREE.Mesh(geometry, materials[6]);
+    mesh.position.set(0, CYLINDER_HEIGHT/2, 0);
     cylinder.add(mesh);
 
-    createRing(innerRing, INNER_RING_IRADIUS, INNER_RING_ORADIUS);
-    createRing(middleRing, MIDDLE_RING_IRADIUS, MIDDLE_RING_ORADIUS);
-    createRing(outterRing, OUTTER_RING_IRADIUS, OUTTER_RING_ORADIUS);
+    for (var ringIndex = 0; ringIndex < RING_NUMBER; ringIndex++)
+        createRing(rings[ringIndex]);
 }
 
 function createCarousel() {
@@ -152,26 +183,10 @@ function createSkydome() {
     ); 
 
     const texture = new THREE.TextureLoader().load('textures/texture.png' ); 
-    material = new THREE.MeshBasicMaterial( { map:texture, side: THREE.BackSide } );
+    const material = new THREE.MeshBasicMaterial( { map:texture, side: THREE.BackSide } );
     mesh = new THREE.Mesh( geometry, material ); 
     
     scene.add(mesh);
-}
-
-//////////////////////
-/* CHECK COLLISIONS */
-//////////////////////
-function checkCollisions(){
-    'use strict';
-
-}
-
-///////////////////////
-/* HANDLE COLLISIONS */
-///////////////////////
-function handleCollisions(){
-    'use strict';
-
 }
 
 ////////////
@@ -179,7 +194,9 @@ function handleCollisions(){
 ////////////
 function update(){
     'use strict';
-
+    for (var ringIndex = 0; ringIndex < RING_NUMBER; ringIndex++)
+        for (var surfaceIndex = 0; surfaceIndex < SURFACE_NUMBER; surfaceIndex++)
+            rings[ringIndex].surfaces[surfaceIndex].rotateY(SURFACE_SPEED * delta_t);
 }
 
 /////////////
@@ -201,8 +218,7 @@ function init() {
     document.body.appendChild(renderer.domElement);
 
     createScene();
-    camera = createPrespectiveCamera(100, 100, 100);
-    render();
+    camera = createPrespectiveCamera(150, 150, 150);
 }
 
 /////////////////////
@@ -211,6 +227,7 @@ function init() {
 
 function animate() {
     'use strict';
+    delta_t = clock.getDelta();
     update();
     render();
     requestAnimationFrame(animate);
