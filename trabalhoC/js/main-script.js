@@ -9,13 +9,13 @@ import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 ///////////////
 
 // skydome
-const SKYDOME_RADIUS = 1000;
+const SKYDOME_RADIUS = 300;
 const SKYDOME_WIDTH = 32;
 const SKYDOME_HEIGHT = 16;
 const SKYDOME_PHI_START = 0;
-const SKYDOME_PHI_LENGHT = 6.283185307179586;
+const SKYDOME_PHI_LENGHT = 2 * Math.PI;
 const SKYDOME_THETA_START = 0;
-const SKYDOME_THETA_LENGHT = 1.64619455048105;
+const SKYDOME_THETA_LENGHT = Math.PI / 2;
 
 // cylinder
 const CYLINDER_RADIUS = 20;
@@ -57,6 +57,9 @@ const extrudeSettings = {
 //////////////////////
 var scene, renderer, camera, camera1, camera2;
 
+// lights
+var ambientLight, directionalLight;
+
 // TODO: colours
 var materials = [new THREE.MeshLambertMaterial(),
     new THREE.MeshPhongMaterial(),
@@ -93,6 +96,14 @@ function createScene() {
 
     scene = new THREE.Scene();
     scene.add(new THREE.AxesHelper(100));
+    
+    ambientLight = new THREE.AmbientLight(0xFFA500, 0.2);
+    scene.add(ambientLight);
+
+    directionalLight = new THREE.DirectionalLight(0xFFFFFF, 0.5);
+    directionalLight.position.set(250, 250, 250);
+    directionalLight.lookAt(scene.position);
+    scene.add(directionalLight);
 
     createSkydome();
     createCarousel();
@@ -125,7 +136,7 @@ function createSurfaces(ring) {
         ring.surfaces[i] = new THREE.Object3D();
         ring.surfaces[i].position.set(
             ring.rSurfaces * Math.cos(i * Math.PI / 4),
-            RING_HEIGHT, // TODO: add surface height/2
+            RING_HEIGHT + 5,
             ring.rSurfaces * Math.sin(i * Math.PI / 4)
         );
         ring.object.add(ring.surfaces[i]);
@@ -148,11 +159,32 @@ function createRing(ring, initial_height) {
 
     cylinder.add(ring.object);
 
-    geometry = new THREE.RingGeometry(ring.innerRadius, ring.outerRadius, 32);
-    mesh = new THREE.Mesh(geometry, materials[5]);
-    mesh.position.set(0, 0, 0);
-    mesh.rotation.x = Math.PI/2;
+    const path = new THREE.Curve();
+    const side = (ring.outerRadius - ring.innerRadius) / 2;
+    path.getPoint = function(t) {
+        const angle = 2 * Math.PI * t;
+        const x = (ring.innerRadius + side) * Math.cos(angle);
+        const y = (ring.innerRadius + side) * Math.sin(angle);
+        return new THREE.Vector3(x, y, 0);
+    };
+
+    // Rectangular cross-section. As we rotate the ring, the height is first 
+    // defined in the x-axis
+    const shape = new THREE.Shape();
+    shape.moveTo(-RING_HEIGHT, -side);
+    shape.lineTo(RING_HEIGHT, -side);
+    shape.lineTo(RING_HEIGHT, side);
+    shape.lineTo(-RING_HEIGHT, side);
+    shape.lineTo(-RING_HEIGHT, -side);
+
+    const geometry = new THREE.ExtrudeGeometry(shape, { steps: 64, extrudePath: path });
+    const mesh = new THREE.Mesh(geometry, materials[0]);
+
+    // we rotate the mesh after extruding as to extrude we need to use the 
+    // 2D shape in the xOy plane so that the extrusion is done at the z axis
+    mesh.rotation.x = Math.PI / 2;
     ring.object.add(mesh);
+    
     createSurfaces(ring);
 }
 
@@ -193,7 +225,7 @@ function createSkydome() {
 
     const texture = new THREE.TextureLoader().load('textures/texture.png' ); 
     const material = new THREE.MeshBasicMaterial( { map:texture, side: THREE.BackSide } );
-    mesh = new THREE.Mesh( geometry, material ); 
+    mesh = new THREE.Mesh(geometry, material); 
     
     scene.add(mesh);
 }
@@ -285,7 +317,11 @@ function onKeyDown(e) {
         case 51: //3
             outerRing.userData.moving = true;
             break;
+        case 68: //D
+            directionalLight.visible = !directionalLight.visible;
+            break;
     }
+
 }
 
 ///////////////////////
