@@ -7,20 +7,70 @@ import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 //////////////////////
 /* GLOBAL VARIABLES */
 //////////////////////
+var scene, renderer, camera, camera1, camera2;
 
+var materials = [new THREE.MeshBasicMaterial({ color: 0xbbbbbb, wireframe: true }),
+    new THREE.MeshBasicMaterial({ color: 0xffdd00, wireframe: true }),
+    new THREE.MeshBasicMaterial({ color: 0xffaa00, wireframe: true }),
+    new THREE.MeshBasicMaterial({ color: 0x4d4dff, wireframe: true }),
+    new THREE.MeshBasicMaterial({ color: 0x2d2d9c, wireframe: true }),
+    new THREE.MeshBasicMaterial({ color: 0xD2042D, wireframe: true }),
+    new THREE.MeshBasicMaterial({ color: 0x660f56, wireframe: true }),
+    new THREE.MeshBasicMaterial({ color: 0x295e11, wireframe: true }),
+    new THREE.MeshBasicMaterial({ color: 0x179799, wireframe: true }),
+    new THREE.MeshBasicMaterial({ color: 0xE918BB, wireframe: true }),
+    new THREE.MeshBasicMaterial({ color: 0x74d455, wireframe: true })]
+    
+// object3D(s)
+var carousel, cylinder, innerRing, middleRing, outterRing;
+
+var geometry, mesh;
+
+///////////////
+/* CONSTANTS */
+///////////////
+
+// cilindro
+const R_CYLINDER = 20;
+const H_CYLINDER = 40;
+
+const extrudeSettings = {
+	steps: 2,
+	depth: 16,
+	bevelEnabled: true,
+	bevelThickness: 1,
+	bevelSize: 1,
+	bevelOffset: 0,
+	bevelSegments: 1
+};
 
 /////////////////////
 /* CREATE SCENE(S) */
 /////////////////////
-function createScene(){
+
+function createScene() {
     'use strict';
 
+    scene = new THREE.Scene();
+    scene.add(new THREE.AxesHelper(100));
+
+    createCarousel();
 }
 
 //////////////////////
 /* CREATE CAMERA(S) */
 //////////////////////
+function createPrespectiveCamera(x, y, z) {
+    'use strict';
+    var camera = new THREE.PerspectiveCamera(70,
+        window.innerWidth / window.innerHeight,
+        1,
+        1000);
+    camera.position.set(x, y, z);
+    camera.lookAt(scene.position);
 
+    return camera;
+}
 
 /////////////////////
 /* CREATE LIGHT(S) */
@@ -29,6 +79,29 @@ function createScene(){
 ////////////////////////
 /* CREATE OBJECT3D(S) */
 ////////////////////////
+function createCenterCylinder(x, y, z) {
+    'use strict';
+
+    cylinder = new THREE.Object3D();
+    cylinder.position.set(x, y, z);
+
+    carousel.add(cylinder);
+    
+    geometry = new THREE.CylinderGeometry(R_CYLINDER, R_CYLINDER, H_CYLINDER);
+    mesh = new THREE.Mesh(geometry, materials[1]);
+    mesh.position.set(0, 0, 0);
+    carousel.add(mesh);
+}
+
+function createCarousel() {
+    'use strict';
+    carousel = new THREE.Object3D();
+    carousel.position.set(0, 0, 0);
+    
+    scene.add(carousel);
+    createCenterCylinder();
+
+}
 
 //////////////////////
 /* CHECK COLLISIONS */
@@ -59,7 +132,7 @@ function update(){
 /////////////
 function render() {
     'use strict';
-
+    renderer.render(scene, camera);
 }
 
 ////////////////////////////////
@@ -67,7 +140,14 @@ function render() {
 ////////////////////////////////
 function init() {
     'use strict';
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0xFFFFFF);
+    document.body.appendChild(renderer.domElement);
 
+    createScene();
+    camera = createPrespectiveCamera(100, 100, 100);
+    render();
 }
 
 /////////////////////
