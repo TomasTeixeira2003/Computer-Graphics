@@ -1,19 +1,74 @@
 <!doctype html>
 <html>
 <head>
-    <meta charset="ťutf-8" ť>
-    <title>Hello 3D World!</title>
-    <link rel="stylesheet" href="css/style.css">
-    <script type="importmap">
-        {
-          "imports": {
-            "three": "https://cdn.jsdelivr.net/npm/three@v0.163.0/build/three.module.js",
-            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/"
-          }
-        }
-    </script>
+	<meta charset="utf-8">
+	<title>Grupo 61 - Entrega B</title>
+	<link rel="stylesheet" href="css/style.css">
+	<style>
+		.highlight {
+			font-weight: bold;
+			color: #007acc;
+		}
+	</style>
+	<script type="importmap">
+		{
+		  "imports": {
+			"three": "https://cdn.jsdelivr.net/npm/three@v0.163.0/build/three.module.js",
+			"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/"
+		  }
+		}
+	</script>
 </head>
 <body>
-    <script type="module" src="js/main-script.js"></script>
+	<script type="module" src="js/main-script.js"></script>
+	<div class="HUD">
+		<h1><b>HUD</b></h1>
+		<dl>
+			<dt>Controlos dos anéis do carrossel</dt>
+				<dd id="1">1 - Anel interior</dd>
+				<dd id="2">2 - Anel médio</dd>
+				<dd id="3">3 - Anel exterior</dd>
+			<dt>Opções de iluminação</dt>
+				<dd id="D">D - Luz direcional ligada</dd>
+				<dd id="P">P - Luzes pontuais ligadas</dd>
+				<dd id="S">S - Luzes spotlight ligadas</dd>
+				<dd id="T">T - Cálculo de iluminação ligado</dd>
+			<dt>Opções de sombreamento</dt>
+				<dd id="Q">Q - Sobreamento de Gouraud</dd>
+				<dd id="W">W - Sobreamento de Phong</dd>
+				<dd id="E">E - Sobreamento cartoon</dd>
+				<dd id="R">R - Sobreamento NormalMap</dd>
+		</dl>
+	</div> 
+	<script>
+      	// by default, the app uses camera 1
+		document.getElementById("Q").classList.add('highlight');
+		var previousShadingKey = "Q";
+
+        document.addEventListener('keydown', function(event) {
+            const key = event.key.toUpperCase();
+			const shadingKeys = ["Q", "W", "E", "R"];
+			const lightKeys = ["D", "P", "S", "T"];
+            
+			if (shadingKeys.includes(key)) {
+				document.getElementById(previousShadingKey).classList.remove('highlight');
+				document.getElementById(key).classList.add('highlight');
+				previousShadingKey = key;
+			}
+			else if (lightKeys.includes(key))
+				document.getElementById(key).classList.toggle('highlight');
+			else
+				document.getElementById(key).classList.add('highlight');
+        });
+
+        document.addEventListener('keyup', function(event) {
+            const key = event.key.toUpperCase();
+			const controlKeys = ["1", "2", "3"];
+            
+			if (controlKeys.includes(key))
+        		document.getElementById(key).classList.remove('highlight');
+        });
+    </script>
 </body>
 </html>
+
