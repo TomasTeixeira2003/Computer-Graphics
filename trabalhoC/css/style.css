@@ -1,43 +1,5 @@
 body {
-    margin: 0;
+    margin: 0px;
     background-color: #fff;
-    font-family: monospace;
-}
-
-.HUD {
-    background-color: #1e1e1e;
-    position: absolute;
-    width: 350px;
-    left: -20px;
-    padding-left: 40px;
-    padding-top: 20px;
-    padding-bottom: 20px;
-    padding-right: 20px;
-    border-radius: 20px;
-    opacity: 75%;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-    color: #fbfbfb;
-}
-
-h1 {
-    font-size: 20px;
-    text-align: center;
-    font-weight: bold;
-}
-
-dl {
-    margin-top: 20px;
-}
-
-dt {
-    font-weight: bold;
-    font-size: 16px;
-    margin-top: 15px;
-}
-
-dd {
-    margin-top: 10px;
-    margin-left: 20px;
-    margin-bottom: 10px;
-    font-size: 14px;
+    overflow: hidden;
 }

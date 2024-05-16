@@ -1,78 +1,19 @@
 <!doctype html>
 <html>
 <head>
-	<meta charset="utf-8">
-	<title>Grupo 61 - Entrega B</title>
-	<link rel="stylesheet" href="css/style.css">
-	<style>
-		.highlight {
-			font-weight: bold;
-			color: #007acc;
-		}
-	</style>
-	<script type="importmap">
-		{
-		  "imports": {
-			"three": "https://cdn.jsdelivr.net/npm/three@v0.163.0/build/three.module.js",
-			"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/"
-		  }
-		}
-	</script>
+    <meta charset="ťutf-8" ť>
+    <title>Hello 3D World!</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script type="importmap">
+        {
+          "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@v0.163.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/"
+          }
+        }
+    </script>
 </head>
 <body>
-	<script type="module" src="js/main-script.js"></script>
-	<div class="HUD">
-		<h1><b>HUD</b></h1>
-		<dl>
-			<dt>Câmeras</dt>
-				<dd id="1">1 - Câmera frontal de projeção ortogonal</dd>
-				<dd id="2">2 - Câmera lateral de projeção ortogonal</dd>
-				<dd id="3">3 - Câmera de topo de projeção ortogonal</dd>
-				<dd id="4">4 - Câmera fixa de projeção ortogonal</dd>
-				<dd id="5">5 - Câmera fixa de projeção perspetiva</dd>
-				<dd id="6">6 - Câmera móvel de projeção perspetiva</dd>
-			<dt>Visualização</dt>
-				<dd id="7">7 - Representação sólida ligada</dd>
-			<dt>Controlos da grua</dt>
-				<dd id="Q">Q - Rodar grua (sentido horário)</dd>
-				<dd id="A">A - Rodar grua (sentido anti-horário)</dd>
-				<dd id="W">W - Deslocar carrinho para a frente</dd>
-				<dd id="S">S - Deslocar carrinho para trás</dd>
-				<dd id="E">E - Subir garra</dd>
-				<dd id="D">D - Descer garra</dd>
-				<dd id="R">R - Abrir garra</dd>
-				<dd id="F">F - Fechar garra</dd>
-		</dl>
-	</div> 
-
-	<script>
-		// by default, the app uses camera 1
-		document.getElementById("1").classList.add('highlight');
-		var previousCameraKey = "1";
-
-        document.addEventListener('keydown', function(event) {
-            const key = event.key.toUpperCase();
-			const cameraKeys = ["1", "2", "3", "4", "5", "6"];
-            
-			if (cameraKeys.includes(key)) {
-				document.getElementById(previousCameraKey).classList.remove('highlight');
-				document.getElementById(key).classList.add('highlight');
-				previousCameraKey = key;
-			} 
-			else if (key === "7")
-				document.getElementById(key).classList.toggle('highlight');
-			else
-				document.getElementById(key).classList.add('highlight');
-        });
-
-        document.addEventListener('keyup', function(event) {
-            const key = event.key.toUpperCase();
-			const controlKeys = ["Q", "A", "W", "S", "E", "D", "R", "F"];
-            
-			if (controlKeys.includes(key))
-        		document.getElementById(key).classList.remove('highlight');
-        });
-    </script>
+    <script type="module" src="js/main-script.js"></script>
 </body>
 </html>
-
