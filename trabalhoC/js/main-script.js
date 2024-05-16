@@ -32,7 +32,16 @@ var geometry, mesh;
 
 // cilindro
 const R_CYLINDER = 20;
-const H_CYLINDER = 40;
+const H_CYLINDER = 100;
+
+// anéis
+const H_RING = 10;
+const INNER_RING_IRADIUS = R_CYLINDER;
+const INNER_RING_ORADIUS = 30;
+const MIDDLE_RING_IRADIUS = INNER_RING_ORADIUS;
+const MIDDLE_RING_ORADIUS = 40;
+const OUTTER_RING_IRADIUS = MIDDLE_RING_ORADIUS;
+const OUTTER_RING_ORADIUS = 50;
 
 const extrudeSettings = {
 	steps: 2,
@@ -79,18 +88,42 @@ function createPrespectiveCamera(x, y, z) {
 ////////////////////////
 /* CREATE OBJECT3D(S) */
 ////////////////////////
-function createCenterCylinder(x, y, z) {
+function createInnerRing() {
+    'use strict';
+
+    innerRing = new THREE.Object3D();
+    innerRing.position.set(0, 0, 0);
+
+    cylinder.add(innerRing);
+
+    geometry = new THREE.RingGeometry(INNER_RING_IRADIUS, INNER_RING_ORADIUS, 32);
+    mesh = new THREE.Mesh(geometry, materials[0]);
+    mesh.position.set(0, 0, 0);
+    mesh.rotation.x = Math.PI/2;
+    innerRing.add(mesh);
+}
+
+function createMiddleRing() {}
+function createOutterRing() {}
+
+function createCenterCylinder() {
     'use strict';
 
     cylinder = new THREE.Object3D();
-    cylinder.position.set(x, y, z);
+    cylinder.position.set(0, 0, 0);
 
     carousel.add(cylinder);
     
     geometry = new THREE.CylinderGeometry(R_CYLINDER, R_CYLINDER, H_CYLINDER);
     mesh = new THREE.Mesh(geometry, materials[1]);
-    mesh.position.set(0, 0, 0);
-    carousel.add(mesh);
+    mesh.position.set(0, H_CYLINDER/2, 0);
+    cylinder.add(mesh);
+
+    createInnerRing();
+    createMiddleRing();
+    createOutterRing();
+
+
 }
 
 function createCarousel() {
