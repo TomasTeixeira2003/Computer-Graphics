@@ -471,7 +471,7 @@ function checkCollisions() {
 
     for (var i = 0; i < objects.length; i++) {
         var objPosition = objects[i].object.position;
-        if (Math.pow(R_BLOCK + objects[i].radius, 2) > blockPosition.distanceToSquared(objPosition)) {
+        if (Math.pow(R_BLOCK + objects[i].radius, 2) >= blockPosition.distanceToSquared(objPosition)) {
             grabbingObject = true;
             grabbedObject = objects[i].object;
             objPosition.set(0, -objects[i].radius - H_BLOCK - H_CLAW / 2, 0);
@@ -629,8 +629,6 @@ function init() {
 
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
-
-    render();
 }
 
 /////////////////////
