@@ -127,26 +127,37 @@ function createPrespectiveCamera(x, y, z) {
 /////////////////////
 /* CREATE LIGHT(S) */
 /////////////////////
+function addSpotlightToSurface(surface) {
+    const spotLight = new THREE.SpotLight( 0xffffff );
+    spotLight.position.set(0, 0, 0);
+
+    // TODO
+
+
+    surface.add(spotLight);
+}
 
 ////////////////////////
 /* CREATE OBJECT3D(S) */
 ////////////////////////
 function createSurfaces(ring) {
-    for (var i = 0; i < 8; i++) {        
+    for (var i = 0; i < SURFACE_NUMBER; i++) {
         ring.surfaces[i] = new THREE.Object3D();
-        ring.surfaces[i].position.set(
+        var surface = ring.surfaces[i];
+        surface.position.set(
             ring.rSurfaces * Math.cos(i * Math.PI / 4),
-            RING_HEIGHT + 5,
+            RING_HEIGHT + 5, // TODO: add height of surface
             ring.rSurfaces * Math.sin(i * Math.PI / 4)
         );
-        ring.object.add(ring.surfaces[i]);
+        ring.object.add(surface);
+        addSpotlightToSurface(surface);
         
         // TODO: parametric surfaces
         geometry = new THREE.BoxGeometry(10, 10, 10);
         geometry.computeBoundingSphere();
         mesh = new THREE.Mesh(geometry, materials[4]);
         mesh.position.set(0, 0, 0);
-        ring.surfaces[i].add(mesh);
+        surface.add(mesh);
     }
 }
 
@@ -155,27 +166,25 @@ function createRing(ring, initial_height) {
 
     ring.object.userData = { moving: false, direction: 1 };
     ring.object.position.set(0, initial_height, 0);
-    
 
     cylinder.add(ring.object);
 
     const path = new THREE.Curve();
-    const side = (ring.outerRadius - ring.innerRadius) / 2;
     path.getPoint = function(t) {
         const angle = 2 * Math.PI * t;
-        const x = (ring.innerRadius + side) * Math.cos(angle);
-        const y = (ring.innerRadius + side) * Math.sin(angle);
+        const x = ring.rSurfaces * Math.cos(angle);
+        const y = ring.rSurfaces * Math.sin(angle);
         return new THREE.Vector3(x, y, 0);
     };
 
     // Rectangular cross-section. As we rotate the ring, the height is first 
     // defined in the x-axis
     const shape = new THREE.Shape();
-    shape.moveTo(-RING_HEIGHT, -side);
-    shape.lineTo(RING_HEIGHT, -side);
-    shape.lineTo(RING_HEIGHT, side);
-    shape.lineTo(-RING_HEIGHT, side);
-    shape.lineTo(-RING_HEIGHT, -side);
+    shape.moveTo(-RING_HEIGHT/2, -RING_WIDTH/2);
+    shape.lineTo(RING_HEIGHT/2, -RING_WIDTH/2);
+    shape.lineTo(RING_HEIGHT/2, RING_WIDTH/2);
+    shape.lineTo(-RING_HEIGHT/2, RING_WIDTH/2);
+    shape.lineTo(-RING_HEIGHT/2, -RING_WIDTH/2);
 
     const geometry = new THREE.ExtrudeGeometry(shape, { steps: 64, extrudePath: path });
     const mesh = new THREE.Mesh(geometry, materials[0]);
@@ -184,6 +193,7 @@ function createRing(ring, initial_height) {
     // 2D shape in the xOy plane so that the extrusion is done at the z axis
     mesh.rotation.x = Math.PI / 2;
     ring.object.add(mesh);
+    mesh.position.set(0, RING_HEIGHT/2, 0);
     
     createSurfaces(ring);
 }
