@@ -42,16 +42,6 @@ const SURFACE_SPEED = 2;
 const CYLINDER_SPEED = 0.1;
 const RING_SPEED = 10;
 
-const extrudeSettings = {
-	steps: 2,
-	depth: 16,
-	bevelEnabled: true,
-	bevelThickness: 1,
-	bevelSize: 1,
-	bevelOffset: 0,
-	bevelSegments: 1
-};
-
 //////////////////////
 /* GLOBAL VARIABLES */
 //////////////////////
@@ -146,17 +136,16 @@ function createSurfaces(ring) {
         var surface = ring.surfaces[i];
         surface.position.set(
             ring.rSurfaces * Math.cos(i * Math.PI / 4),
-            RING_HEIGHT + 5, // TODO: add height of surface
+            RING_HEIGHT,
             ring.rSurfaces * Math.sin(i * Math.PI / 4)
         );
         ring.object.add(surface);
         addSpotlightToSurface(surface);
-        
-        // TODO: parametric surfaces
+
         geometry = new THREE.BoxGeometry(10, 10, 10);
-        geometry.computeBoundingSphere();
         mesh = new THREE.Mesh(geometry, materials[4]);
-        mesh.position.set(0, 0, 0);
+        mesh.position.set(0, 5, 0); // TODO: add height of surface
+
         surface.add(mesh);
     }
 }
@@ -330,6 +319,28 @@ function onKeyDown(e) {
         case 68: //D
             directionalLight.visible = !directionalLight.visible;
             break;
+        case 80: //P
+
+            break;
+        case 83: //S
+
+            break;
+        case 84: //T
+
+            break;
+        case 81: //Q
+
+            break;
+        case 87: //W
+
+            break;
+        case 69: //E
+
+            break;
+        case 82: //R
+
+            break;
+
     }
 
 }
