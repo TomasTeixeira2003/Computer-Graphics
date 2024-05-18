@@ -140,7 +140,7 @@ function plane(width, height) {
 
 function elliptic_torus(a, b, c) {
     return function (u, v, target) {
-        u *= 2 * Math.PI;
+        u *= 11/6 * Math.PI;
         v *= 2 * Math.PI;
         const x = (c + a * Math.cos(v)) * Math.cos(u);
         const y = (c + a * Math.cos(v)) * Math.sin(u);
@@ -151,7 +151,7 @@ function elliptic_torus(a, b, c) {
 
 function one_sheeted_hyperboloid(a, c) {
     return function (u, v, target) {
-        u *= 2 * Math.PI;
+        u *= 11/6 * Math.PI;
         v = 2 * v - 1;
         const x = a * Math.cosh(v) * Math.cos(u);
         const y = a * Math.cosh(v) * Math.sin(u);
@@ -163,7 +163,7 @@ function one_sheeted_hyperboloid(a, c) {
 function two_sheeted_hyperboloid(a, c) {
     return function (u, v, target) {
         u = (u - 0.5) * 2;
-        v *= 2 * Math.PI;
+        v *= 11/6 * Math.PI;
         const x = a * Math.sinh(u) * Math.cos(v);
         const y = a * Math.sinh(u) * Math.sin(v);
         const z = c * Math.cosh(u) * u / Math.abs(u);
@@ -173,7 +173,7 @@ function two_sheeted_hyperboloid(a, c) {
 
 function paraboloid(a) {
     return function (u, v, target) {
-        v *= 2 * Math.PI;
+        v *= 11/6 * Math.PI;
         u *= 2;
         const x = a * u * Math.cos(v);
         const y = a * u * Math.sin(v);
@@ -185,7 +185,7 @@ function paraboloid(a) {
 function pseudosphere(a) {
     return function (u, v, target) {
         u = (u - 0.5) * 7;
-        v *= 2 * Math.PI;
+        v *= 11/6 * Math.PI;
         const x = a * Math.cos(v) / Math.cosh(u);
         const y = a * Math.sin(v) / Math.cosh(u);
         const z = a * (u - Math.tanh(u));
@@ -194,14 +194,14 @@ function pseudosphere(a) {
 }
 
 var paramSurfaces = [
-    { func: ParametricGeometries.klein, offset: new THREE.Vector3(0, KLEIN_HEIGHT / 2, 0) },
-    { func: ParametricGeometries.mobius3d, offset: new THREE.Vector3(0, 0.5, 0) },
-    { func: plane(PLANE_WIDTH, PLANE_HEIGHT), offset: new THREE.Vector3(0, 0, 0) },
-    { func: elliptic_torus(2, 2, 2), offset: new THREE.Vector3(0, 2, 0) },
-    { func: one_sheeted_hyperboloid(2, 2), offset: new THREE.Vector3(0, 2, 0) },
-    { func: two_sheeted_hyperboloid(4, 2), offset: new THREE.Vector3(0, 4, 0) },
-    { func: paraboloid(2), offset: new THREE.Vector3(0, 0, 0) },
-    { func: pseudosphere(2), offset: new THREE.Vector3(0, 5, 0) }
+    { func: ParametricGeometries.klein, offset: KLEIN_HEIGHT / 2 },
+    { func: ParametricGeometries.mobius3d, offset: 0.5 },
+    { func: plane(PLANE_WIDTH, PLANE_HEIGHT), offset: 0 },
+    { func: elliptic_torus(2, 2, 2), offset: 2 },
+    { func: one_sheeted_hyperboloid(2, 2), offset: 2 },
+    { func: two_sheeted_hyperboloid(4, 2), offset: 4 },
+    { func: paraboloid(2), offset: 0 },
+    { func: pseudosphere(2), offset: 5 }
 ]
 
 /////////////////////
@@ -260,7 +260,7 @@ function addSpotlightToSurface(surface) {
 ////////////////////////
 /* CREATE OBJECT3D(S) */
 ////////////////////////
-function createSurfaces(ring, index) {
+function createSurfaces(ring, ringIndex) {
     for (var i = 0; i < SURFACE_NUMBER; i++) {
         ring.surfaces[i] = new THREE.Object3D();
         var surface = ring.surfaces[i];
@@ -272,14 +272,14 @@ function createSurfaces(ring, index) {
         ring.object.add(surface);
         addSpotlightToSurface(surface);
 
-        const geometry = new ParametricGeometry(paramSurfaces[(i + index) % SURFACE_NUMBER].func, 100, 100);
+        const geometry = new ParametricGeometry(paramSurfaces[(i + ringIndex) % SURFACE_NUMBER].func, 100, 100);
         mesh = new THREE.Mesh(geometry, materials[SURFACES_INDEX][GOURAUD_INDEX]);
-        mesh.scale.set(index + 1, index + 1, index + 1);
-        mesh.rotation.set(-Math.PI / 2, 0, Math.PI / 3 * (3 * (index + 1) + i));
+        mesh.scale.set(ringIndex + 1, ringIndex + 1, ringIndex + 1);
+        mesh.rotation.set(-Math.PI / 2, 0, Math.PI / 3 * (3 * (ringIndex + 1) + i));
         mesh.position.set(
-            paramSurfaces[(i + index) % SURFACE_NUMBER].offset.x * (index + 1),
-            paramSurfaces[(i + index) % SURFACE_NUMBER].offset.y * (index + 1),
-            paramSurfaces[(i + index) % SURFACE_NUMBER].offset.z * (index + 1)
+            0,
+            paramSurfaces[(i + ringIndex) % SURFACE_NUMBER].offset * (ringIndex + 1),
+            0,
         );
 
         surface.add(mesh);
@@ -304,7 +304,7 @@ function createRingShape(ring) {
     return shape;
 }
 
-function createRing(ring, initial_height, index) {
+function createRing(ring, initial_height, ringIndex) {
     'use strict';
 
     ring.object.userData = { moving: false, direction: 1 };
@@ -316,7 +316,7 @@ function createRing(ring, initial_height, index) {
     path.getPoint = function (t) { return new THREE.Vector3(0, 0, RING_HEIGHT * t); };
 
     const geometry = new THREE.ExtrudeGeometry(createRingShape(ring), { steps: 64, extrudePath: path });
-    const mesh = new THREE.Mesh(geometry, materials[index][GOURAUD_INDEX]);
+    const mesh = new THREE.Mesh(geometry, materials[ringIndex][GOURAUD_INDEX]);
 
     // we rotate the mesh after extruding as to extrude we need to use the 
     // 2D shape in the xOy plane so that the extrusion is done at the z axis
@@ -324,7 +324,7 @@ function createRing(ring, initial_height, index) {
     ring.object.add(mesh);
     mesh.position.set(0, RING_HEIGHT, 0);
 
-    createSurfaces(ring, index);
+    createSurfaces(ring, ringIndex);
 }
 
 function createCenterCylinder() {
@@ -341,7 +341,7 @@ function createCenterCylinder() {
     cylinder.add(mesh);
 
     for (var ringIndex = 0; ringIndex < RING_NUMBER; ringIndex++)
-        createRing(rings[ringIndex], RING_HEIGHT * ringIndex, ringIndex);
+        createRing(rings[ringIndex], RING_HEIGHT * (RING_NUMBER - ringIndex-1), ringIndex);
 }
 
 function createCarousel() {
