@@ -25,7 +25,7 @@ const CYLINDER_HEIGHT = 30;
 
 // rings
 const RING_HEIGHT = CYLINDER_HEIGHT / 3;
-const RING_WIDTH = 30;
+const RING_WIDTH = 35;
 const IRING_IRADIUS = CYLINDER_RADIUS;
 const IRING_ORADIUS = IRING_IRADIUS + RING_WIDTH;
 const IRING_SURFACES_RADIUS = IRING_IRADIUS + RING_WIDTH / 2;
@@ -128,6 +128,16 @@ var materials = [
     ]
 ]
 
+function plane(width, height) {
+    return function (u, v, target) {
+        const x = u * width - width / 2;
+        const y = 0;
+        const z = v * height;
+
+        target.set(x, y, z);
+    };
+}
+
 function elliptic_torus(a, b, c) {
     return function (u, v, target) {
         u *= 2 * Math.PI;
@@ -184,12 +194,12 @@ function pseudosphere(a) {
 }
 
 var paramSurfaces = [
-    { func: ParametricGeometries.klein, offset: new THREE.Vector3(0, KLEIN_HEIGHT/2, 0) },
-    { func: ParametricGeometries.plane(PLANE_WIDTH, PLANE_HEIGHT), offset: new THREE.Vector3(- PLANE_WIDTH/2, 0, 0)},
-    { func: elliptic_torus(2, 2, 2), offset: new THREE.Vector3(0, 2, 0)},
-    { func: ParametricGeometries.mobius3d, offset: new THREE.Vector3(0,0.5, 0) },
+    { func: ParametricGeometries.klein, offset: new THREE.Vector3(0, KLEIN_HEIGHT / 2, 0) },
+    { func: ParametricGeometries.mobius3d, offset: new THREE.Vector3(0, 0.5, 0) },
+    { func: plane(PLANE_WIDTH, PLANE_HEIGHT), offset: new THREE.Vector3(0, 0, 0) },
+    { func: elliptic_torus(2, 2, 2), offset: new THREE.Vector3(0, 2, 0) },
     { func: one_sheeted_hyperboloid(2, 2), offset: new THREE.Vector3(0, 2, 0) },
-    { func: two_sheeted_hyperboloid(3, 2), offset: new THREE.Vector3(0, 3, 0) },
+    { func: two_sheeted_hyperboloid(4, 2), offset: new THREE.Vector3(0, 4, 0) },
     { func: paraboloid(2), offset: new THREE.Vector3(0, 0, 0) },
     { func: pseudosphere(2), offset: new THREE.Vector3(0, 5, 0) }
 ]
@@ -262,12 +272,16 @@ function createSurfaces(ring, index) {
         ring.object.add(surface);
         addSpotlightToSurface(surface);
 
-        // TODO: fix this chaos
         const geometry = new ParametricGeometry(paramSurfaces[(i + index) % SURFACE_NUMBER].func, 100, 100);
         mesh = new THREE.Mesh(geometry, materials[SURFACES_INDEX][GOURAUD_INDEX]);
-        mesh.scale.set((index+1), (index+1), (index+1)    );
-        mesh.rotation.x = -Math.PI / 2;
-        mesh.position.set(paramSurfaces[(i + index) % SURFACE_NUMBER].offset.x * (index+1), paramSurfaces[(i + index) % SURFACE_NUMBER].offset.y* (index+1), paramSurfaces[(i + index) % SURFACE_NUMBER].offset.z*(index+1));
+        mesh.scale.set(index + 1, index + 1, index + 1);
+        mesh.rotation.set(-Math.PI / 2, 0, Math.PI / 3 * (3 * (index + 1) + i));
+        mesh.position.set(
+            paramSurfaces[(i + index) % SURFACE_NUMBER].offset.x * (index + 1),
+            paramSurfaces[(i + index) % SURFACE_NUMBER].offset.y * (index + 1),
+            paramSurfaces[(i + index) % SURFACE_NUMBER].offset.z * (index + 1)
+        );
+
         surface.add(mesh);
     }
 }
@@ -325,7 +339,7 @@ function createCenterCylinder() {
     mesh = new THREE.Mesh(geometry, materials[CYLINDER_INDEX][GOURAUD_INDEX]);
     mesh.position.set(0, CYLINDER_HEIGHT / 2, 0);
     cylinder.add(mesh);
-    
+
     for (var ringIndex = 0; ringIndex < RING_NUMBER; ringIndex++)
         createRing(rings[ringIndex], RING_HEIGHT * ringIndex, ringIndex);
 }
@@ -376,7 +390,7 @@ function update() {
             if (ring.position.y < 0 || ring.position.y > CYLINDER_HEIGHT - RING_HEIGHT)
                 ring.userData.direction = -ring.userData.direction;
         }
-        }
+    }
 
     cylinder.rotateY(CYLINDER_SPEED * delta_t);
 }
