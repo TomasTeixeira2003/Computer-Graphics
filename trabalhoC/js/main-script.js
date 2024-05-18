@@ -36,6 +36,13 @@ const ORING_IRADIUS = MRING_ORADIUS;
 const ORING_ORADIUS = ORING_IRADIUS + RING_WIDTH;
 const ORING_SURFACES_RADIUS = ORING_IRADIUS + RING_WIDTH / 2;
 
+// surfaces
+const KLEIN_HEIGHT = 20;
+const PLANE_HEIGHT = 10;
+const PLANE_WIDTH = 8;
+const SMALL_MOBIUS_HEIGHT = 0;
+
+
 // total number of items
 const RING_NUMBER = 3;
 const SURFACE_NUMBER = 8;
@@ -121,44 +128,10 @@ var materials = [
     ]
 ]
 
-function one_sheeted_hyperboloid(a, c) {
-    return function (u, v, target) {
-        const x = a * (Math.cos(u) - Math.sin(u) * v);
-        const y = a * (Math.cos(u) * v + Math.sin(u));
-        const z = c * v;
-        target.set(x, y, z);
-    }
-}
-
-function two_sheeted_hyperboloid(a, c) {
-    return function (u, v, target) {
-        const x = a * Math.sinh(u) * Math.cos(v);
-        const y = a * Math.sinh(u) * Math.sin(v);
-        const z = c * Math.cosh(u);
-        target.set(x, y, z);
-    }
-}
-
-function paraboloid(a, h) {
-    return function (u, v, target) {
-        const x = a * Math.sqrt(u / h) * Math.cos(v);
-        const y = a * Math.sqrt(u / h) * Math.sin(v);
-        const z = u;
-        target.set(x, y, z);
-    }
-}
-
-function pseudosphere(a, h) {
-    return function (u, v, target) {
-        const x = a * Math.cos(v) / Math.cosh(u);
-        const y = a * Math.sin(v) / Math.cosh(u);
-        const z = h * (u - Math.tanh(u));
-        target.set(x, y, z);
-    }
-}
-
 function elliptic_torus(a, b, c) {
     return function (u, v, target) {
+        u *= 2 * Math.PI;
+        v *= 2 * Math.PI;
         const x = (c + a * Math.cos(v)) * Math.cos(u);
         const y = (c + a * Math.cos(v)) * Math.sin(u);
         const z = b * Math.sin(v);
@@ -166,15 +139,59 @@ function elliptic_torus(a, b, c) {
     }
 }
 
-var param_surfaces = [
-    ParametricGeometries.klein,
-    ParametricGeometries.plane(10, 10),
-    ParametricGeometries.mobius3d,
-    elliptic_torus(10, 10, 10),
-    one_sheeted_hyperboloid(5, 5),
-    two_sheeted_hyperboloid(10, 10),
-    paraboloid(100, 100),
-    pseudosphere(10, 10)
+function one_sheeted_hyperboloid(a, c) {
+    return function (u, v, target) {
+        u *= 2 * Math.PI;
+        v = 2 * v - 1;
+        const x = a * Math.cosh(v) * Math.cos(u);
+        const y = a * Math.cosh(v) * Math.sin(u);
+        const z = c * Math.sinh(v);
+        target.set(x, y, z);
+    }
+}
+
+function two_sheeted_hyperboloid(a, c) {
+    return function (u, v, target) {
+        u = (u - 0.5) * 2;
+        v *= 2 * Math.PI;
+        const x = a * Math.sinh(u) * Math.cos(v);
+        const y = a * Math.sinh(u) * Math.sin(v);
+        const z = c * Math.cosh(u) * u / Math.abs(u);
+        target.set(x, y, z);
+    }
+}
+
+function paraboloid(a) {
+    return function (u, v, target) {
+        v *= 2 * Math.PI;
+        u *= 2;
+        const x = a * u * Math.cos(v);
+        const y = a * u * Math.sin(v);
+        const z = Math.pow(u, 2);
+        target.set(x, y, z);
+    }
+}
+
+function pseudosphere(a) {
+    return function (u, v, target) {
+        u = (u - 0.5) * 7;
+        v *= 2 * Math.PI;
+        const x = a * Math.cos(v) / Math.cosh(u);
+        const y = a * Math.sin(v) / Math.cosh(u);
+        const z = a * (u - Math.tanh(u));
+        target.set(x, y, z);
+    };
+}
+
+var paramSurfaces = [
+    { func: ParametricGeometries.klein, offset: new THREE.Vector3(0, KLEIN_HEIGHT/2, 0) },
+    { func: ParametricGeometries.plane(PLANE_WIDTH, PLANE_HEIGHT), offset: new THREE.Vector3(- PLANE_WIDTH/2, 0, 0)},
+    { func: elliptic_torus(2, 2, 2), offset: new THREE.Vector3(0, 2, 0)},
+    { func: ParametricGeometries.mobius3d, offset: new THREE.Vector3(0,0.5, 0) },
+    { func: one_sheeted_hyperboloid(2, 2), offset: new THREE.Vector3(0, 2, 0) },
+    { func: two_sheeted_hyperboloid(3, 2), offset: new THREE.Vector3(0, 3, 0) },
+    { func: paraboloid(2), offset: new THREE.Vector3(0, 0, 0) },
+    { func: pseudosphere(2), offset: new THREE.Vector3(0, 5, 0) }
 ]
 
 /////////////////////
@@ -246,11 +263,11 @@ function createSurfaces(ring, index) {
         addSpotlightToSurface(surface);
 
         // TODO: fix this chaos
-        const geometry = new ParametricGeometry(param_surfaces[(i + index) % SURFACE_NUMBER], 100, 100);
+        const geometry = new ParametricGeometry(paramSurfaces[(i + index) % SURFACE_NUMBER].func, 100, 100);
         mesh = new THREE.Mesh(geometry, materials[SURFACES_INDEX][GOURAUD_INDEX]);
-        mesh.scale.set(1.5, 1.5, 1.5);
+        mesh.scale.set((index+1), (index+1), (index+1)    );
         mesh.rotation.x = -Math.PI / 2;
-        mesh.position.set(0, 5, 0);
+        mesh.position.set(paramSurfaces[(i + index) % SURFACE_NUMBER].offset.x * (index+1), paramSurfaces[(i + index) % SURFACE_NUMBER].offset.y* (index+1), paramSurfaces[(i + index) % SURFACE_NUMBER].offset.z*(index+1));
         surface.add(mesh);
     }
 }
@@ -291,7 +308,7 @@ function createRing(ring, initial_height, index) {
     // 2D shape in the xOy plane so that the extrusion is done at the z axis
     mesh.rotation.x = Math.PI / 2;
     ring.object.add(mesh);
-    mesh.position.set(0, RING_HEIGHT / 2, 0);
+    mesh.position.set(0, RING_HEIGHT, 0);
 
     createSurfaces(ring, index);
 }
@@ -308,7 +325,7 @@ function createCenterCylinder() {
     mesh = new THREE.Mesh(geometry, materials[CYLINDER_INDEX][GOURAUD_INDEX]);
     mesh.position.set(0, CYLINDER_HEIGHT / 2, 0);
     cylinder.add(mesh);
-
+    
     for (var ringIndex = 0; ringIndex < RING_NUMBER; ringIndex++)
         createRing(rings[ringIndex], RING_HEIGHT * ringIndex, ringIndex);
 }
@@ -359,7 +376,7 @@ function update() {
             if (ring.position.y < 0 || ring.position.y > CYLINDER_HEIGHT - RING_HEIGHT)
                 ring.userData.direction = -ring.userData.direction;
         }
-    }
+        }
 
     cylinder.rotateY(CYLINDER_SPEED * delta_t);
 }
