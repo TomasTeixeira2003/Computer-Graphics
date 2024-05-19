@@ -41,16 +41,18 @@
 		</dl>
 	</div> 
 	<script>
-      	// by default, the app uses Gouraud shading and the directional light is on
+      	// by default, the app uses Gouraud shading and all lights are on
 		document.getElementById("Q").classList.add('highlight');
 		document.getElementById("D").classList.add('highlight');
 		document.getElementById("T").classList.add('highlight');
+		document.getElementById("P").classList.add('highlight');
 		var previousShadingKey = "Q";
 
         document.addEventListener('keydown', function(event) {
             const key = event.key.toUpperCase();
 			const shadingKeys = ["Q", "W", "E", "R"];
 			const lightKeys = ["D", "P", "S", "T"];
+			const movingKeys = ["1", "2", "3"];
             
 			if (shadingKeys.includes(key)) {
 				document.getElementById(previousShadingKey).classList.remove('highlight');
@@ -59,7 +61,7 @@
 			}
 			else if (lightKeys.includes(key))
 				document.getElementById(key).classList.toggle('highlight');
-			else
+			else if (movingKeys.includes(key))
 				document.getElementById(key).classList.add('highlight');
         });
 

@@ -19,6 +19,10 @@ const SKYDOME_PHI_LENGHT = 2 * Math.PI;
 const SKYDOME_THETA_START = 0;
 const SKYDOME_THETA_LENGHT = Math.PI / 2;
 
+// mobius strip
+const MOBIUS_RADIUS = 30;
+const MOBIUS_WIDTH = 8;
+
 // cylinder
 const CYLINDER_RADIUS = 20;
 const CYLINDER_HEIGHT = 30;
@@ -40,12 +44,11 @@ const ORING_SURFACES_RADIUS = ORING_IRADIUS + RING_WIDTH / 2;
 const KLEIN_HEIGHT = 20;
 const PLANE_HEIGHT = 10;
 const PLANE_WIDTH = 8;
-const SMALL_MOBIUS_HEIGHT = 0;
-
 
 // total number of items
 const RING_NUMBER = 3;
 const SURFACE_NUMBER = 8;
+const POINT_LIGHT_NUMBER = 8;
 
 // speeds
 const SURFACE_SPEED = 2;
@@ -55,6 +58,7 @@ const RING_SPEED = 10;
 // indexes
 const SURFACES_INDEX = 3;
 const CYLINDER_INDEX = 4;
+const MOBIUS_STRIP_INDEX = 5;
 const GOURAUD_INDEX = 0;
 const PHONG_INDEX = 1;
 const CARTOON_INDEX = 2;
@@ -68,9 +72,10 @@ var scene, renderer, camera, camera1, camera2;
 
 // lights
 var ambientLight, directionalLight;
+var pointLights = [];
 
 // object3D(s)
-var carousel, cylinder, innerRing, middleRing, outerRing;
+var carousel, mobiusStrip, cylinder, innerRing, middleRing, outerRing;
 var innerRing = new THREE.Object3D();
 var middleRing = new THREE.Object3D();
 var outerRing = new THREE.Object3D();
@@ -92,7 +97,8 @@ var colors = [
     0x0A85ED,           // medium ring
     0x0D41E1,           // outer ring
     0xFF00FF,           // parametric surfaces
-    0xACEDFD            // cylinder
+    0xACEDFD,           // cylinder
+    0x00FF00            // mobius strip
 ]
 
 var materials = [
@@ -125,6 +131,12 @@ var materials = [
     new THREE.MeshToonMaterial({ color: colors[4], side: THREE.DoubleSide }),
     new THREE.MeshNormalMaterial({ side: THREE.DoubleSide }),
     new THREE.MeshBasicMaterial({ color: colors[4], side: THREE.DoubleSide })
+    ],
+    [new THREE.MeshLambertMaterial({ color: colors[5], side: THREE.DoubleSide }),
+    new THREE.MeshPhongMaterial({ color: colors[5], side: THREE.DoubleSide }),
+    new THREE.MeshToonMaterial({ color: colors[5], side: THREE.DoubleSide }),
+    new THREE.MeshNormalMaterial({ side: THREE.DoubleSide }),
+    new THREE.MeshBasicMaterial({ color: colors[5], side: THREE.DoubleSide })
     ]
 ]
 
@@ -162,6 +174,7 @@ function one_sheeted_hyperboloid(a, c) {
 
 function two_sheeted_hyperboloid(a, c) {
     return function (u, v, target) {
+        if (u == 0.5) return;
         u = (u - 0.5) * 2;
         v *= 11/6 * Math.PI;
         const x = a * Math.sinh(u) * Math.cos(v);
@@ -222,6 +235,7 @@ function createScene() {
     scene.add(directionalLight);
 
     createSkydome();
+    createMobiusStrip();
     createCarousel();
 }
 
@@ -260,6 +274,71 @@ function addSpotlightToSurface(surface) {
 ////////////////////////
 /* CREATE OBJECT3D(S) */
 ////////////////////////
+function createMobiusStrip() {
+    mobiusStrip = new THREE.Object3D();
+    mobiusStrip.position.set(0, 100, 0);
+    geometry = new THREE.BufferGeometry();
+
+    const segments = 50;
+    const vertices = [];
+
+    for (let i = 0; i <= segments; i++) {
+        const t = i * 2 * Math.PI / segments;
+        const nextT = (i + 1) * 2 * Math.PI / segments;
+
+        const x1 = (MOBIUS_RADIUS + MOBIUS_WIDTH * Math.cos(t / 2)) * Math.cos(t);
+        const z1 = (MOBIUS_RADIUS + MOBIUS_WIDTH * Math.cos(t / 2)) * Math.sin(t);
+        const y1 = MOBIUS_WIDTH * Math.sin(t / 2);
+
+        const x2 = (MOBIUS_RADIUS - MOBIUS_WIDTH * Math.cos(t / 2)) * Math.cos(t);
+        const z2 = (MOBIUS_RADIUS - MOBIUS_WIDTH * Math.cos(t / 2)) * Math.sin(t);
+        const y2 = - MOBIUS_WIDTH * Math.sin(t / 2);
+
+        const x3 = (MOBIUS_RADIUS + MOBIUS_WIDTH * Math.cos(nextT / 2)) * Math.cos(nextT);
+        const z3 = (MOBIUS_RADIUS + MOBIUS_WIDTH * Math.cos(nextT / 2)) * Math.sin(nextT);
+        const y3 = MOBIUS_WIDTH * Math.sin(nextT / 2);
+
+        const x4 = (MOBIUS_RADIUS - MOBIUS_WIDTH * Math.cos(nextT / 2)) * Math.cos(nextT);
+        const z4 = (MOBIUS_RADIUS - MOBIUS_WIDTH * Math.cos(nextT / 2)) * Math.sin(nextT);
+        const y4 = - MOBIUS_WIDTH * Math.sin(nextT / 2);
+
+        // first triangle
+        vertices.push(x1, y1, z1);
+        vertices.push(x2, y2, z2);
+        vertices.push(x3, y3, z3);
+
+        // second triangle
+        vertices.push(x2, y2, z2);
+        vertices.push(x3, y3, z3);
+        vertices.push(x4, y4, z4);
+
+        // add lights
+        if (i % Math.floor(segments / 8) === 0) {
+            const light = new THREE.PointLight(0xffffff, 30, 10);
+            light.position.set((x1+x2)/2, (y1+y2)/2, (z1+z2)/2);
+            pointLights.push(light);
+        }
+    }
+
+    // convert array and create indicesArray
+    const verticesArray = new Float32Array(vertices);
+    const indicesArray = new Uint32Array(
+        Array.from({ length: (segments+1) * 6 },
+        (_, index) => index)
+    );
+
+    geometry.setAttribute('position', new THREE.BufferAttribute(verticesArray, 3));
+    geometry.setIndex(new THREE.BufferAttribute(indicesArray, 1));
+    geometry.computeVertexNormals();
+
+    mesh = new THREE.Mesh(geometry, materials[MOBIUS_STRIP_INDEX][GOURAUD_INDEX]);
+    for (let i = 0; i < POINT_LIGHT_NUMBER; i++)
+        mesh.add(pointLights[i]);
+
+    scene.add(mobiusStrip);
+    mobiusStrip.add(mesh);
+}
+
 function createSurfaces(ring, ringIndex) {
     for (var i = 0; i < SURFACE_NUMBER; i++) {
         ring.surfaces[i] = new THREE.Object3D();
@@ -391,7 +470,7 @@ function update() {
                 ring.userData.direction = -ring.userData.direction;
         }
     }
-
+    mobiusStrip.rotateY(CYLINDER_SPEED * delta_t);
     cylinder.rotateY(CYLINDER_SPEED * delta_t);
 }
 
@@ -452,6 +531,7 @@ function changeToShading(index) {
         return;
 
     cylinder.children[0].material = materials[CYLINDER_INDEX][index];
+    mobiusStrip.children[0].material = materials[MOBIUS_STRIP_INDEX][index];
     for (let i = 0; i < RING_NUMBER; i++) {
         rings[i].object.children[0].material = materials[i][index];
         for (let j = 0; j < SURFACE_NUMBER; j++)
@@ -475,17 +555,9 @@ function onKeyDown(e) {
         case 68: //D
             directionalLight.visible = !directionalLight.visible;
             break;
-        case 69: //E
-            changeToShading(CARTOON_INDEX);
-            carousel.userData.shading_type = CARTOON_INDEX;
-            break;
-        case 81: //Q
-            changeToShading(GOURAUD_INDEX);
-            carousel.userData.shading_type = GOURAUD_INDEX;
-            break;
-        case 82: //R
-            changeToShading(NORMALMAP_INDEX);
-            carousel.userData.shading_type = NORMALMAP_INDEX;
+        case 80: //P
+            for (let i = 0; i < POINT_LIGHT_NUMBER; i++)
+                pointLights[i].visible = !pointLights[i].visible;
             break;
         case 84: //T
             if (carousel.userData.lighting) {
@@ -497,10 +569,24 @@ function onKeyDown(e) {
                 changeToShading(carousel.userData.shading_type);
             }
             break;
+        case 81: //Q
+            changeToShading(GOURAUD_INDEX);
+            carousel.userData.shading_type = GOURAUD_INDEX;
+            break;
         case 87: //W
             changeToShading(PHONG_INDEX);
             carousel.userData.shading_type = PHONG_INDEX;
             break;
+        case 69: //E
+            changeToShading(CARTOON_INDEX);
+            carousel.userData.shading_type = CARTOON_INDEX;
+            break;
+        case 82: //R
+            changeToShading(NORMALMAP_INDEX);
+            carousel.userData.shading_type = NORMALMAP_INDEX;
+            break;
+        
+        
     }
 }
 
