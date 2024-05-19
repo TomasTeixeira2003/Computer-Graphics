@@ -285,7 +285,7 @@ function createMobiusStrip() {
     for (let i = 0; i <= segments; i++) {
         const t = i * 2 * Math.PI / segments;
         const nextT = (i + 1) * 2 * Math.PI / segments;
-
+        
         const x1 = (MOBIUS_RADIUS + MOBIUS_WIDTH * Math.cos(t / 2)) * Math.cos(t);
         const z1 = (MOBIUS_RADIUS + MOBIUS_WIDTH * Math.cos(t / 2)) * Math.sin(t);
         const y1 = MOBIUS_WIDTH * Math.sin(t / 2);
@@ -314,8 +314,8 @@ function createMobiusStrip() {
 
         // add lights
         if (i % Math.floor(segments / 8) === 0) {
-            const light = new THREE.PointLight(0xffffff, 30, 10);
-            light.position.set((x1+x2)/2, (y1+y2)/2, (z1+z2)/2);
+            const light = new THREE.PointLight(0xffffff, 40, 250);
+            light.position.set((x1+x2)/2 + Math.cos(t), (y1+y2)/2, (z1+z2)/2 + Math.sin(t));
             pointLights.push(light);
         }
     }
@@ -470,7 +470,6 @@ function update() {
                 ring.userData.direction = -ring.userData.direction;
         }
     }
-    mobiusStrip.rotateY(CYLINDER_SPEED * delta_t);
     cylinder.rotateY(CYLINDER_SPEED * delta_t);
 }
 
