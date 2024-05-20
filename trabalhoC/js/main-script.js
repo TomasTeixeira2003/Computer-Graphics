@@ -172,14 +172,18 @@ function one_sheeted_hyperboloid(a, c) {
     }
 }
 
-function two_sheeted_hyperboloid(a, c) {
+function parabolic_hyperboloid(a, b) {
     return function (u, v, target) {
-        if (u == 0.5) return;
-        u = (u - 0.5) * 2;
-        v *= 11/6 * Math.PI;
-        const x = a * Math.sinh(u) * Math.cos(v);
-        const y = a * Math.sinh(u) * Math.sin(v);
-        const z = c * Math.cosh(u) * u / Math.abs(u);
+        // Scaling u and v to appropriate ranges
+        u = (u - 0.5) * 2 * Math.PI;  // u goes from -π to π
+        v = (v - 0.5) * 2;            // v goes from -1 to 1
+
+        // Coordinates of the parabolic hyperboloid
+        const x = a * Math.sinh(u);    // Hyperbolic sine function for x
+        const y = b * Math.cosh(u) * v; // Hyperbolic cosine function scaled by v for y
+        const z = v * v - u * u;        // Hyperboloid equation for z
+
+        // Setting the coordinates on the target object
         target.set(x, y, z);
     }
 }
@@ -212,7 +216,7 @@ var paramSurfaces = [
     { func: plane(PLANE_WIDTH, PLANE_HEIGHT), offset: 0 },
     { func: elliptic_torus(2, 2, 2), offset: 2 },
     { func: one_sheeted_hyperboloid(2, 2), offset: 2 },
-    { func: two_sheeted_hyperboloid(4, 2), offset: 4 },
+    { func: parabolic_hyperboloid(0.1, 0.1), offset: 10  },
     { func: paraboloid(2), offset: 0 },
     { func: pseudosphere(2), offset: 5 }
 ]
@@ -288,57 +292,49 @@ function createMobiusStrip() {
     mobiusStrip.position.set(0, 100, 0);
     geometry = new THREE.BufferGeometry();
 
-    const segments = 50;
-    const vertices = [];
-
-    for (let i = 0; i <= segments; i++) {
-        const t = i * 2 * Math.PI / segments;
-        const nextT = (i + 1) * 2 * Math.PI / segments;
-        
-        const x1 = (MOBIUS_RADIUS + MOBIUS_WIDTH * Math.cos(t / 2)) * Math.cos(t);
-        const z1 = (MOBIUS_RADIUS + MOBIUS_WIDTH * Math.cos(t / 2)) * Math.sin(t);
-        const y1 = MOBIUS_WIDTH * Math.sin(t / 2);
-
-        const x2 = (MOBIUS_RADIUS - MOBIUS_WIDTH * Math.cos(t / 2)) * Math.cos(t);
-        const z2 = (MOBIUS_RADIUS - MOBIUS_WIDTH * Math.cos(t / 2)) * Math.sin(t);
-        const y2 = - MOBIUS_WIDTH * Math.sin(t / 2);
-
-        const x3 = (MOBIUS_RADIUS + MOBIUS_WIDTH * Math.cos(nextT / 2)) * Math.cos(nextT);
-        const z3 = (MOBIUS_RADIUS + MOBIUS_WIDTH * Math.cos(nextT / 2)) * Math.sin(nextT);
-        const y3 = MOBIUS_WIDTH * Math.sin(nextT / 2);
-
-        const x4 = (MOBIUS_RADIUS - MOBIUS_WIDTH * Math.cos(nextT / 2)) * Math.cos(nextT);
-        const z4 = (MOBIUS_RADIUS - MOBIUS_WIDTH * Math.cos(nextT / 2)) * Math.sin(nextT);
-        const y4 = - MOBIUS_WIDTH * Math.sin(nextT / 2);
-
-        // first triangle
-        vertices.push(x1, y1, z1);
-        vertices.push(x2, y2, z2);
-        vertices.push(x3, y3, z3);
-
-        // second triangle
-        vertices.push(x2, y2, z2);
-        vertices.push(x3, y3, z3);
-        vertices.push(x4, y4, z4);
-
-        // add lights
-        if (i % Math.floor(segments / 8) === 0) {
-            const light = new THREE.PointLight(0xffffff, 40, 250);
-            light.position.set((x1+x2)/2 + Math.cos(t), (y1+y2)/2, (z1+z2)/2 + Math.sin(t));
-            pointLights.push(light);
-        }
-    }
-
     // convert array and create indicesArray
-    const verticesArray = new Float32Array(vertices);
-    const indicesArray = new Uint32Array(
-        Array.from({ length: (segments+1) * 6 },
-        (_, index) => index)
+    const verticesArray = new Float32Array([
+        MOBIUS_RADIUS, MOBIUS_WIDTH/2, 0,
+        MOBIUS_RADIUS, -MOBIUS_WIDTH/2, 0,
+        MOBIUS_RADIUS * Math.cos(Math.PI/4), MOBIUS_WIDTH/2, MOBIUS_RADIUS * Math.sin(Math.PI/4),
+        MOBIUS_RADIUS * Math.cos(Math.PI/4), -MOBIUS_WIDTH/2, MOBIUS_RADIUS * Math.sin(Math.PI/4),
+        0, MOBIUS_WIDTH/2, MOBIUS_RADIUS,
+        0, -MOBIUS_WIDTH/2, MOBIUS_RADIUS,
+        MOBIUS_RADIUS * Math.cos(3 * Math.PI/4), MOBIUS_WIDTH/2, MOBIUS_RADIUS * Math.sin(3 * Math.PI/4),
+        MOBIUS_RADIUS * Math.cos(3 * Math.PI/4), -MOBIUS_WIDTH/2, MOBIUS_RADIUS * Math.sin(3 * Math.PI/4),
+        -MOBIUS_RADIUS, MOBIUS_WIDTH/2, 0,
+        -MOBIUS_RADIUS, -MOBIUS_WIDTH/2, 0,
+        MOBIUS_RADIUS * Math.cos(5 * Math.PI/4), MOBIUS_WIDTH/2, MOBIUS_RADIUS * Math.sin(5 * Math.PI/4),
+        MOBIUS_RADIUS * Math.cos(5 * Math.PI/4), -MOBIUS_WIDTH/2, MOBIUS_RADIUS * Math.sin(5 * Math.PI/4),  
+        0, MOBIUS_WIDTH/2, -MOBIUS_RADIUS,
+        0, -MOBIUS_WIDTH/2, -MOBIUS_RADIUS,
+        MOBIUS_RADIUS * Math.cos(7 * Math.PI/4), MOBIUS_WIDTH/2, MOBIUS_RADIUS * Math.sin(7 * Math.PI/4),
+        MOBIUS_RADIUS * Math.cos(7 * Math.PI/4), -MOBIUS_WIDTH/2, MOBIUS_RADIUS * Math.sin(7 * Math.PI/4)
+    ]);
+    const indicesArray = new Uint32Array([
+        0,1,3,
+        0,3,2,
+        2,3,4,
+        4,3,5,
+        4,5,6,
+        6,5,7,
+        6,7,8,
+        8,7,9,
+        8,9,10,
+        10,9,11,
+        10,11,12,
+        12,11,13,
+        12,13,14,
+        14,13,15,
+        14,15,0,
+        0,15,1
+    ]
     );
 
     geometry.setAttribute('position', new THREE.BufferAttribute(verticesArray, 3));
     geometry.setIndex(new THREE.BufferAttribute(indicesArray, 1));
     geometry.computeVertexNormals();
+    geometry.normalsNeedUpdate = true;
 
     mesh = new THREE.Mesh(geometry, materials[MOBIUS_STRIP_INDEX][GOURAUD_INDEX]);
     for (let i = 0; i < POINT_LIGHT_NUMBER; i++)
@@ -359,7 +355,8 @@ function createSurfaces(ring, ringIndex) {
         );
         ring.object.add(surface);
 
-        const geometry = new ParametricGeometry(paramSurfaces[(i + ringIndex) % SURFACE_NUMBER].func, 100, 100);
+        geometry = new ParametricGeometry(paramSurfaces[(i + ringIndex) % SURFACE_NUMBER].func, 100, 100);
+        geometry.normalsNeedUpdate = true;
         mesh = new THREE.Mesh(geometry, materials[SURFACES_INDEX][GOURAUD_INDEX]);
         mesh.scale.set(ringIndex + 1, ringIndex + 1, ringIndex + 1);
         mesh.rotation.set(-Math.PI / 2, 0, Math.PI / 3 * (3 * (ringIndex + 1) + i));
@@ -395,7 +392,7 @@ function createRingShape(ring) {
 function createRing(ring, initial_height, ringIndex) {
     'use strict';
 
-    ring.object.userData = { moving: false, direction: 1 };
+    ring.object.userData = { moving: true, direction: 1 };
     ring.object.position.set(0, initial_height, 0);
 
     cylinder.add(ring.object);
@@ -403,8 +400,9 @@ function createRing(ring, initial_height, ringIndex) {
     const path = new THREE.Curve();
     path.getPoint = function (t) { return new THREE.Vector3(0, 0, RING_HEIGHT * t); };
 
-    const geometry = new THREE.ExtrudeGeometry(createRingShape(ring), { steps: 64, extrudePath: path });
-    const mesh = new THREE.Mesh(geometry, materials[ringIndex][GOURAUD_INDEX]);
+    geometry = new THREE.ExtrudeGeometry(createRingShape(ring), { steps: 64, extrudePath: path });
+    geometry.normalsNeedUpdate = true;
+    mesh = new THREE.Mesh(geometry, materials[ringIndex][GOURAUD_INDEX]);
 
     // we rotate the mesh after extruding as to extrude we need to use the 
     // 2D shape in the xOy plane so that the extrusion is done at the z axis
@@ -424,6 +422,7 @@ function createCenterCylinder() {
     carousel.add(cylinder);
 
     geometry = new THREE.CylinderGeometry(CYLINDER_RADIUS, CYLINDER_RADIUS, CYLINDER_HEIGHT);
+    geometry.normalsNeedUpdate = true;
     mesh = new THREE.Mesh(geometry, materials[CYLINDER_INDEX][GOURAUD_INDEX]);
     mesh.position.set(0, CYLINDER_HEIGHT / 2, 0);
     cylinder.add(mesh);
@@ -450,7 +449,7 @@ function createSkydome() {
         SKYDOME_RADIUS, SKYDOME_WIDTH, SKYDOME_HEIGHT, SKYDOME_PHI_START,
         SKYDOME_PHI_LENGHT, SKYDOME_THETA_START, SKYDOME_THETA_LENGHT
     );
-
+    geometry.normalsNeedUpdate = true;
     const texture = new THREE.TextureLoader().load('textures/texture.png');
     const material = new THREE.MeshBasicMaterial({ map: texture, side: THREE.BackSide });
     mesh = new THREE.Mesh(geometry, material);
@@ -475,11 +474,12 @@ function update() {
             ring.position.y += ring.userData.direction * RING_SPEED * delta_t;
 
             // change direction
-            if (ring.position.y < 0 || ring.position.y > CYLINDER_HEIGHT - RING_HEIGHT)
+            if (ring.position.y < 0 || ring.position.y >= CYLINDER_HEIGHT - RING_HEIGHT)
                 ring.userData.direction = -ring.userData.direction;
         }
     }
     cylinder.rotateY(CYLINDER_SPEED * delta_t);
+    mobiusStrip.rotateY(3 * CYLINDER_SPEED * delta_t);
 }
 
 /////////////
@@ -552,13 +552,13 @@ function onKeyDown(e) {
 
     switch (e.keyCode) {
         case 49: //1
-            innerRing.userData.moving = true;
+            innerRing.userData.moving = !innerRing.userData.moving;
             break;
         case 50: //2
-            middleRing.userData.moving = true;
+            middleRing.userData.moving = !middleRing.userData.moving ;
             break;
         case 51: //3
-            outerRing.userData.moving = true;
+            outerRing.userData.moving = !outerRing.userData.moving;
             break;
         case 68: //D
             directionalLight.visible = !directionalLight.visible;
@@ -603,18 +603,6 @@ function onKeyDown(e) {
 ///////////////////////
 function onKeyUp(e) {
     'use strict';
-
-    switch (e.keyCode) {
-        case 49: //1
-            innerRing.userData.moving = false;
-            break;
-        case 50: //2
-            middleRing.userData.moving = false;
-            break;
-        case 51: //3
-            outerRing.userData.moving = false;
-            break;
-    }
 }
 
 init();

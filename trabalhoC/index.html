@@ -42,6 +42,9 @@
 	</div> 
 	<script>
       	// by default, the app uses Gouraud shading and all lights are on
+		document.getElementById("1").classList.add('highlight');
+		document.getElementById("2").classList.add('highlight');
+		document.getElementById("3").classList.add('highlight');
 		document.getElementById("D").classList.add('highlight');
 		document.getElementById("P").classList.add('highlight');
 		document.getElementById("S").classList.add('highlight');
@@ -63,15 +66,7 @@
 			else if (lightKeys.includes(key))
 				document.getElementById(key).classList.toggle('highlight');
 			else if (movingKeys.includes(key))
-				document.getElementById(key).classList.add('highlight');
-        });
-
-        document.addEventListener('keyup', function(event) {
-            const key = event.key.toUpperCase();
-			const controlKeys = ["1", "2", "3"];
-            
-			if (controlKeys.includes(key))
-        		document.getElementById(key).classList.remove('highlight');
+				document.getElementById(key).classList.toggle('highlight');
         });
     </script>
 </body>
