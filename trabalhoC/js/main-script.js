@@ -11,7 +11,7 @@ import { ParametricGeometries } from "three/addons/geometries/ParametricGeometri
 ///////////////
 
 // skydome
-const SKYDOME_RADIUS = 300;
+const SKYDOME_RADIUS = 175;
 const SKYDOME_WIDTH = 32;
 const SKYDOME_HEIGHT = 16;
 const SKYDOME_PHI_START = 0;
@@ -59,6 +59,7 @@ const RING_SPEED = 10;
 const SURFACES_INDEX = 3;
 const CYLINDER_INDEX = 4;
 const MOBIUS_STRIP_INDEX = 5;
+const SKYDOME_INDEX = 6;
 const GOURAUD_INDEX = 0;
 const PHONG_INDEX = 1;
 const CARTOON_INDEX = 2;
@@ -101,24 +102,30 @@ var colors = [
     0x00FF00            // mobius strip
 ]
 
+// skydome and skydome textures
+var skydome;
+var map = new THREE.TextureLoader().load('textures/texture.png');
+var bmap = new THREE.TextureLoader().load('textures/bumpmap.png');
+var dmap = new THREE.TextureLoader().load('textures/displacementmap.png');
+
 var materials = [
-    [new THREE.MeshLambertMaterial({ color: colors[0], side: THREE.DoubleSide }),
-    new THREE.MeshPhongMaterial({ color: colors[0], side: THREE.DoubleSide }),
-    new THREE.MeshToonMaterial({ color: colors[0], side: THREE.DoubleSide }),
-    new THREE.MeshNormalMaterial({ side: THREE.DoubleSide }),
-    new THREE.MeshBasicMaterial({ color: colors[0], side: THREE.DoubleSide })
+    [new THREE.MeshLambertMaterial({ color: colors[0] }),
+    new THREE.MeshPhongMaterial({ color: colors[0] }),
+    new THREE.MeshToonMaterial({ color: colors[0] }),
+    new THREE.MeshNormalMaterial(),
+    new THREE.MeshBasicMaterial({ color: colors[0] })
     ],
-    [new THREE.MeshLambertMaterial({ color: colors[1], side: THREE.DoubleSide }),
-    new THREE.MeshPhongMaterial({ color: colors[1], side: THREE.DoubleSide }),
-    new THREE.MeshToonMaterial({ color: colors[1], side: THREE.DoubleSide }),
-    new THREE.MeshNormalMaterial({ side: THREE.DoubleSide }),
-    new THREE.MeshBasicMaterial({ color: colors[1], side: THREE.DoubleSide })
+    [new THREE.MeshLambertMaterial({ color: colors[1] }),
+    new THREE.MeshPhongMaterial({ color: colors[1] }),
+    new THREE.MeshToonMaterial({ color: colors[1] }),
+    new THREE.MeshNormalMaterial(),
+    new THREE.MeshBasicMaterial({ color: colors[1] })
     ],
-    [new THREE.MeshLambertMaterial({ color: colors[2], side: THREE.DoubleSide }),
-    new THREE.MeshPhongMaterial({ color: colors[2], side: THREE.DoubleSide }),
-    new THREE.MeshToonMaterial({ color: colors[2], side: THREE.DoubleSide }),
-    new THREE.MeshNormalMaterial({ side: THREE.DoubleSide }),
-    new THREE.MeshBasicMaterial({ color: colors[2], side: THREE.DoubleSide })
+    [new THREE.MeshLambertMaterial({ color: colors[2] }),
+    new THREE.MeshPhongMaterial({ color: colors[2] }),
+    new THREE.MeshToonMaterial({ color: colors[2] }),
+    new THREE.MeshNormalMaterial(),
+    new THREE.MeshBasicMaterial({ color: colors[2] })
     ],
     [new THREE.MeshLambertMaterial({ color: colors[3], side: THREE.DoubleSide }),
     new THREE.MeshPhongMaterial({ color: colors[3], side: THREE.DoubleSide }),
@@ -126,17 +133,23 @@ var materials = [
     new THREE.MeshNormalMaterial({ side: THREE.DoubleSide }),
     new THREE.MeshBasicMaterial({ color: colors[3], side: THREE.DoubleSide })
     ],
-    [new THREE.MeshLambertMaterial({ color: colors[4], side: THREE.DoubleSide }),
-    new THREE.MeshPhongMaterial({ color: colors[4], side: THREE.DoubleSide }),
-    new THREE.MeshToonMaterial({ color: colors[4], side: THREE.DoubleSide }),
-    new THREE.MeshNormalMaterial({ side: THREE.DoubleSide }),
-    new THREE.MeshBasicMaterial({ color: colors[4], side: THREE.DoubleSide })
+    [new THREE.MeshLambertMaterial({ color: colors[4] }),
+    new THREE.MeshPhongMaterial({ color: colors[4] }),
+    new THREE.MeshToonMaterial({ color: colors[4] }),
+    new THREE.MeshNormalMaterial(),
+    new THREE.MeshBasicMaterial({ color: colors[4] })
     ],
     [new THREE.MeshLambertMaterial({ color: colors[5], side: THREE.DoubleSide }),
     new THREE.MeshPhongMaterial({ color: colors[5], side: THREE.DoubleSide }),
     new THREE.MeshToonMaterial({ color: colors[5], side: THREE.DoubleSide }),
     new THREE.MeshNormalMaterial({ side: THREE.DoubleSide }),
     new THREE.MeshBasicMaterial({ color: colors[5], side: THREE.DoubleSide })
+    ],
+    [new THREE.MeshLambertMaterial({ map: map, side: THREE.BackSide, bumpMap: bmap, bumpScale: 8, displacementMap: dmap, displacementScale: 1,}),
+    new THREE.MeshPhongMaterial({ map: map, side: THREE.BackSide, bumpMap: bmap, bumpScale: 8, displacementMap: dmap, displacementScale: 1,}),
+    new THREE.MeshToonMaterial({ map: map, side: THREE.BackSide, bumpMap: bmap, bumpScale: 8, displacementMap: dmap, displacementScale: 1,}),
+    new THREE.MeshNormalMaterial({ map: map, side: THREE.BackSide, bumpMap: bmap, bumpScale: 8, displacementMap: dmap, displacementScale: 1,}),
+    new THREE.MeshBasicMaterial({ map: map, side: THREE.BackSide, bumpMap: bmap, bumpScale: 8, displacementMap: dmap, displacementScale: 1,})
     ]
 ]
 
@@ -145,14 +158,13 @@ function plane(width, height) {
         const x = u * width - width / 2;
         const y = 0;
         const z = v * height;
-
         target.set(x, y, z);
     };
 }
 
 function elliptic_torus(a, b, c) {
     return function (u, v, target) {
-        u *= 11/6 * Math.PI;
+        u *= 2 * Math.PI;
         v *= 2 * Math.PI;
         const x = (c + a * Math.cos(v)) * Math.cos(u);
         const y = (c + a * Math.cos(v)) * Math.sin(u);
@@ -163,7 +175,7 @@ function elliptic_torus(a, b, c) {
 
 function one_sheeted_hyperboloid(a, c) {
     return function (u, v, target) {
-        u *= 11/6 * Math.PI;
+        u *= 2 * Math.PI;
         v = 2 * v - 1;
         const x = a * Math.cosh(v) * Math.cos(u);
         const y = a * Math.cosh(v) * Math.sin(u);
@@ -174,23 +186,18 @@ function one_sheeted_hyperboloid(a, c) {
 
 function parabolic_hyperboloid(a, b) {
     return function (u, v, target) {
-        // Scaling u and v to appropriate ranges
-        u = (u - 0.5) * 2 * Math.PI;  // u goes from -π to π
-        v = (v - 0.5) * 2;            // v goes from -1 to 1
-
-        // Coordinates of the parabolic hyperboloid
-        const x = a * Math.sinh(u);    // Hyperbolic sine function for x
-        const y = b * Math.cosh(u) * v; // Hyperbolic cosine function scaled by v for y
-        const z = v * v - u * u;        // Hyperboloid equation for z
-
-        // Setting the coordinates on the target object
+        u = (u - 0.5) * 2 * Math.PI;
+        v = (v - 0.5) * 2;
+        const x = u; 
+        const y = v; 
+        const z = v*v / b*b - u*u/a*a;
         target.set(x, y, z);
     }
 }
 
 function paraboloid(a) {
     return function (u, v, target) {
-        v *= 11/6 * Math.PI;
+        v *= 2 * Math.PI;
         u *= 2;
         const x = a * u * Math.cos(v);
         const y = a * u * Math.sin(v);
@@ -202,7 +209,7 @@ function paraboloid(a) {
 function pseudosphere(a) {
     return function (u, v, target) {
         u = (u - 0.5) * 7;
-        v *= 11/6 * Math.PI;
+        v *= 2 * Math.PI;
         const x = a * Math.cos(v) / Math.cosh(u);
         const y = a * Math.sin(v) / Math.cosh(u);
         const z = a * (u - Math.tanh(u));
@@ -216,7 +223,7 @@ var paramSurfaces = [
     { func: plane(PLANE_WIDTH, PLANE_HEIGHT), offset: 0 },
     { func: elliptic_torus(2, 2, 2), offset: 2 },
     { func: one_sheeted_hyperboloid(2, 2), offset: 2 },
-    { func: parabolic_hyperboloid(0.1, 0.1), offset: 10  },
+    { func: parabolic_hyperboloid(2, 1), offset: 10},
     { func: paraboloid(2), offset: 0 },
     { func: pseudosphere(2), offset: 5 }
 ]
@@ -311,9 +318,9 @@ function createMobiusStrip() {
         MOBIUS_RADIUS * Math.cos(7 * Math.PI/4), MOBIUS_WIDTH/2, MOBIUS_RADIUS * Math.sin(7 * Math.PI/4),
         MOBIUS_RADIUS * Math.cos(7 * Math.PI/4), -MOBIUS_WIDTH/2, MOBIUS_RADIUS * Math.sin(7 * Math.PI/4)
     ]);
-    const indicesArray = new Uint32Array([
+    const indicesArray = [
         0,1,3,
-        0,3,2,
+        1,3,2,
         2,3,4,
         4,3,5,
         4,5,6,
@@ -328,17 +335,21 @@ function createMobiusStrip() {
         14,13,15,
         14,15,0,
         0,15,1
-    ]
-    );
+    ];
 
     geometry.setAttribute('position', new THREE.BufferAttribute(verticesArray, 3));
-    geometry.setIndex(new THREE.BufferAttribute(indicesArray, 1));
+    geometry.setIndex(indicesArray);
     geometry.computeVertexNormals();
     geometry.normalsNeedUpdate = true;
 
     mesh = new THREE.Mesh(geometry, materials[MOBIUS_STRIP_INDEX][GOURAUD_INDEX]);
-    for (let i = 0; i < POINT_LIGHT_NUMBER; i++)
-        mesh.add(pointLights[i]);
+
+    for (let i = 0; i < 2 * Math.PI; i += Math.PI / 4) {
+        const light = new THREE.PointLight(0xffffff, 40, 250);
+        light.position.set((MOBIUS_RADIUS + 1) * Math.cos(i), 0, (MOBIUS_RADIUS + 1) * Math.sin(i));
+        mesh.add(light);
+        pointLights.push(light);
+    }
 
     scene.add(mobiusStrip);
     mobiusStrip.add(mesh);
@@ -450,11 +461,8 @@ function createSkydome() {
         SKYDOME_PHI_LENGHT, SKYDOME_THETA_START, SKYDOME_THETA_LENGHT
     );
     geometry.normalsNeedUpdate = true;
-    const texture = new THREE.TextureLoader().load('textures/texture.png');
-    const material = new THREE.MeshBasicMaterial({ map: texture, side: THREE.BackSide });
-    mesh = new THREE.Mesh(geometry, material);
-
-    scene.add(mesh);
+    skydome = new THREE.Mesh(geometry, materials[SKYDOME_INDEX][GOURAUD_INDEX]);
+    scene.add(skydome);
 }
 
 ////////////
@@ -479,7 +487,7 @@ function update() {
         }
     }
     cylinder.rotateY(CYLINDER_SPEED * delta_t);
-    mobiusStrip.rotateY(3 * CYLINDER_SPEED * delta_t);
+    //mobiusStrip.rotateY(3 * CYLINDER_SPEED * delta_t);
 }
 
 /////////////
@@ -538,8 +546,10 @@ function changeToShading(index) {
     if (!carousel.userData.lighting)
         return;
 
+    skydome.material = materials[SKYDOME_INDEX][index];
     cylinder.children[0].material = materials[CYLINDER_INDEX][index];
     mobiusStrip.children[0].material = materials[MOBIUS_STRIP_INDEX][index];
+    skydome
     for (let i = 0; i < RING_NUMBER; i++) {
         rings[i].object.children[0].material = materials[i][index];
         for (let j = 0; j < SURFACE_NUMBER; j++)
