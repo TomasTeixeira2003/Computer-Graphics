@@ -262,13 +262,22 @@ function createStereoCamera() {
 /* CREATE LIGHT(S) */
 /////////////////////
 function addSpotlightToSurface(surface) {
-    const spotLight = new THREE.SpotLight(0xFFFFFF);
-    spotLight.position.set(0, 0, 0);
+    var spotlight = new THREE.SpotLight(0xffffff, 1);
+    spotlight.position.set(0, 100, 0); // Ajuste a posição conforme necessário
+    spotlight.castShadow = true;
+    spotlight.shadow.mapSize.width = 1024;
+    spotlight.shadow.mapSize.height = 1024;
+    spotlight.shadow.camera.near = 0.5;
+    spotlight.shadow.camera.far = 500;
 
-    // TODO
+    // Direciona a luz para o centro da surface
+    spotlight.target.position.set(0, 0, 0);
+    surface.add(spotlight);
+    surface.add(spotlight.target);
 
-
-    surface.add(spotLight);
+    // Adicione a spotlight à cena global se necessário
+    scene.add(spotlight);
+    scene.add(spotlight.target);
 }
 
 ////////////////////////
@@ -349,7 +358,6 @@ function createSurfaces(ring, ringIndex) {
             ring.rSurfaces * Math.sin(i * Math.PI / 4)
         );
         ring.object.add(surface);
-        addSpotlightToSurface(surface);
 
         const geometry = new ParametricGeometry(paramSurfaces[(i + ringIndex) % SURFACE_NUMBER].func, 100, 100);
         mesh = new THREE.Mesh(geometry, materials[SURFACES_INDEX][GOURAUD_INDEX]);
@@ -362,6 +370,7 @@ function createSurfaces(ring, ringIndex) {
         );
 
         surface.add(mesh);
+        addSpotlightToSurface(surface);
     }
 }
 
@@ -534,7 +543,7 @@ function changeToShading(index) {
     for (let i = 0; i < RING_NUMBER; i++) {
         rings[i].object.children[0].material = materials[i][index];
         for (let j = 0; j < SURFACE_NUMBER; j++)
-            rings[i].surfaces[j].children[1].material = materials[SURFACES_INDEX][index];
+            rings[i].surfaces[j].children[0].material = materials[SURFACES_INDEX][index];
     }
 }
 
