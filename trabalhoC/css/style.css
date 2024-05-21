@@ -1,11 +1,12 @@
 body {
     margin: 0;
-    background-color: #fff;
+    background-color: #1e1e1e; /* Inverted */
     font-family: monospace;
+    color: #1e1e1e; /* Inverted */
 }
 
 .HUD {
-    background-color: #1e1e1e;
+    background-color: #fff; /* Inverted */
     position: absolute;
     width: 350px;
     left: -20px;
@@ -16,13 +17,14 @@ body {
     border-radius: 20px;
     opacity: 75%;
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-    color: #fbfbfb;
+    color: #1e1e1e; /* Inverted */
 }
 
 h1 {
     font-size: 20px;
     text-align: center;
     font-weight: bold;
+    color: #1e1e1e; /* Inverted */
 }
 
 dl {
@@ -33,6 +35,7 @@ dt {
     font-weight: bold;
     font-size: 16px;
     margin-top: 15px;
+    color: #1e1e1e; /* Inverted */
 }
 
 dd {
@@ -40,4 +43,5 @@ dd {
     margin-left: 20px;
     margin-bottom: 10px;
     font-size: 14px;
+    color: #1e1e1e; /* Inverted */
 }

@@ -57,10 +57,9 @@ const CYLINDER_SPEED = 0.1;
 const RING_SPEED = 10;
 
 // indexes
-const SURFACES_INDEX = 3;
-const CYLINDER_INDEX = 4;
-const MOBIUS_STRIP_INDEX = 5;
-const SKYDOME_INDEX = 6;
+const CYLINDER_INDEX = 6;
+const MOBIUS_STRIP_INDEX = 7;
+const SKYDOME_INDEX = 8;
 const GOURAUD_INDEX = 0;
 const PHONG_INDEX = 1;
 const CARTOON_INDEX = 2;
@@ -98,13 +97,16 @@ var colors = [
     0x07C8F9,           // inner ring
     0x0A85ED,           // medium ring
     0x0D41E1,           // outer ring
-    0xFF00FF,           // parametric surfaces
+    0xFFBE0B,           // inner ring parametric surfaces
+    0xFB5607,           // medium ring parametric surfaces
+    0xFF006E,           // outer ring parametric surfaces
     0xACEDFD,           // cylinder
     0x007700            // mobius strip
 ]
 
 // skydome and skydome textures
 var skydome;
+// the still taken from the video was upscaled for better visual results
 var map = new THREE.TextureLoader().load('textures/texture.png');
 var bmap = new THREE.TextureLoader().load('textures/bumpmap.png');
 var dmap = new THREE.TextureLoader().load('textures/displacementmap.png');
@@ -134,11 +136,11 @@ var materials = [
     new THREE.MeshNormalMaterial({ side: THREE.DoubleSide }),
     new THREE.MeshBasicMaterial({ color: colors[3], side: THREE.DoubleSide })
     ],
-    [new THREE.MeshLambertMaterial({ color: colors[4] }),
-    new THREE.MeshPhongMaterial({ color: colors[4] }),
-    new THREE.MeshToonMaterial({ color: colors[4] }),
-    new THREE.MeshNormalMaterial(),
-    new THREE.MeshBasicMaterial({ color: colors[4] })
+    [new THREE.MeshLambertMaterial({ color: colors[4], side: THREE.DoubleSide }),
+    new THREE.MeshPhongMaterial({ color: colors[4], side: THREE.DoubleSide }),
+    new THREE.MeshToonMaterial({ color: colors[4], side: THREE.DoubleSide }),
+    new THREE.MeshNormalMaterial({ side: THREE.DoubleSide }),
+    new THREE.MeshBasicMaterial({ color: colors[4], side: THREE.DoubleSide })
     ],
     [new THREE.MeshLambertMaterial({ color: colors[5], side: THREE.DoubleSide }),
     new THREE.MeshPhongMaterial({ color: colors[5], side: THREE.DoubleSide }),
@@ -146,11 +148,23 @@ var materials = [
     new THREE.MeshNormalMaterial({ side: THREE.DoubleSide }),
     new THREE.MeshBasicMaterial({ color: colors[5], side: THREE.DoubleSide })
     ],
-    [new THREE.MeshLambertMaterial({ map: map, side: THREE.BackSide, bumpMap: bmap, bumpScale: 8, displacementMap: dmap, displacementScale: 1,}),
-    new THREE.MeshPhongMaterial({ map: map, side: THREE.BackSide, bumpMap: bmap, bumpScale: 8, displacementMap: dmap, displacementScale: 1,}),
-    new THREE.MeshToonMaterial({ map: map, side: THREE.BackSide, bumpMap: bmap, bumpScale: 8, displacementMap: dmap, displacementScale: 1,}),
-    new THREE.MeshNormalMaterial({ map: map, side: THREE.BackSide, bumpMap: bmap, bumpScale: 8, displacementMap: dmap, displacementScale: 1,}),
-    new THREE.MeshBasicMaterial({ map: map, side: THREE.BackSide, bumpMap: bmap, bumpScale: 8, displacementMap: dmap, displacementScale: 1,})
+    [new THREE.MeshLambertMaterial({ color: colors[6] }),
+    new THREE.MeshPhongMaterial({ color: colors[6] }),
+    new THREE.MeshToonMaterial({ color: colors[6] }),
+    new THREE.MeshNormalMaterial(),
+    new THREE.MeshBasicMaterial({ color: colors[6] })
+    ],
+    [new THREE.MeshLambertMaterial({ color: colors[7], side: THREE.DoubleSide }),
+    new THREE.MeshPhongMaterial({ color: colors[7], side: THREE.DoubleSide }),
+    new THREE.MeshToonMaterial({ color: colors[7], side: THREE.DoubleSide }),
+    new THREE.MeshNormalMaterial({ side: THREE.DoubleSide }),
+    new THREE.MeshBasicMaterial({ color: colors[7], side: THREE.DoubleSide })
+    ],
+    [new THREE.MeshLambertMaterial({ map: map, side: THREE.BackSide, bumpMap: bmap, bumpScale: 8, displacementMap: dmap, displacementScale: 2, }),
+    new THREE.MeshPhongMaterial({ map: map, side: THREE.BackSide, bumpMap: bmap, bumpScale: 8, displacementMap: dmap, displacementScale: 2, }),
+    new THREE.MeshToonMaterial({ map: map, side: THREE.BackSide, bumpMap: bmap, bumpScale: 8, displacementMap: dmap, displacementScale: 2, }),
+    new THREE.MeshNormalMaterial({ side: THREE.BackSide, bumpMap: bmap, bumpScale: 8, displacementMap: dmap, displacementScale: 2, }),
+    new THREE.MeshBasicMaterial({ map: map, side: THREE.BackSide, })
     ]
 ]
 
@@ -236,14 +250,13 @@ function createScene() {
     'use strict';
 
     scene = new THREE.Scene();
-    scene.add(new THREE.AxesHelper(100));
 
     ambientLight = new THREE.AmbientLight(0xFFC58F, 0.4);
     scene.add(ambientLight);
 
     directionalLight = new THREE.DirectionalLight(0xFFFFFF, 1);
     directionalLight.position.set(250, 250, 250);
-    directionalLight.lookAt(scene.position);
+    directionalLight.target.position.set(scene.position.x, scene.position.y, scene.position.z);
     scene.add(directionalLight);
 
     createSkydome();
@@ -266,8 +279,9 @@ function createPerspectiveCamera(x, y, z) {
     return camera;
 }
 
-function createStereoCamera() {
-    // TODO
+function createStereoCamera(x, y, z) {
+    var camera = new THREE.StereoCamera();
+    return camera;
 }
 
 /////////////////////
@@ -302,10 +316,7 @@ function createMobiusStrip() {
     mobiusStrip.position.set(0, 100, 0);
     geometry = new THREE.BufferGeometry();
 
-    // 0.38
-    // 0.71
-    // 0.92
-    // create verticesArray and indicesArray
+    // 0.71 constant is used as an approximation of sqrt(2)/2
     const verticesArray = new Float32Array([
         MOBIUS_RADIUS, MOBIUS_WIDTH/2, 0,
         MOBIUS_RADIUS, -MOBIUS_WIDTH/2, 0,
@@ -355,6 +366,9 @@ function createMobiusStrip() {
         light.position.set((MOBIUS_RADIUS + 1) * Math.cos(i), 0, (MOBIUS_RADIUS + 1) * Math.sin(i));
         mesh.add(light);
         pointLights.push(light);
+        const sphereSize = 1;
+        const pointLightHelper = new THREE.PointLightHelper( light, sphereSize );
+        scene.add( pointLightHelper );
     }
 
     scene.add(mobiusStrip);
@@ -374,7 +388,7 @@ function createSurfaces(ring, ringIndex) {
 
         geometry = new ParametricGeometry(paramSurfaces[(i + ringIndex) % SURFACE_NUMBER].func, 100, 100);
         geometry.normalsNeedUpdate = true;
-        mesh = new THREE.Mesh(geometry, materials[SURFACES_INDEX][GOURAUD_INDEX]);
+        mesh = new THREE.Mesh(geometry, materials[3 + ringIndex][GOURAUD_INDEX]);
         mesh.scale.set(ringIndex + 1, ringIndex + 1, ringIndex + 1);
         mesh.rotation.set(-Math.PI / 2, 0, Math.PI / 3 * (3 * (ringIndex + 1) + i));
         mesh.position.set(
@@ -451,8 +465,9 @@ function createCenterCylinder() {
 function createCarousel() {
     'use strict';
     carousel = new THREE.Object3D();
-    carousel.position.set(0, 0, 0);
 
+    // Object3D position is lowered to accommodate VR visualization
+    carousel.position.set(0, - CYLINDER_HEIGHT/2 - 2 * RING_HEIGHT, 0);
     scene.add(carousel);
     createCenterCylinder();
 
@@ -468,6 +483,9 @@ function createSkydome() {
     );
     geometry.normalsNeedUpdate = true;
     skydome = new THREE.Mesh(geometry, materials[SKYDOME_INDEX][GOURAUD_INDEX]);
+    
+    // mesh position is lowered to accommodate VR visualization
+    skydome.position.set(0, - CYLINDER_HEIGHT/2 - 2 * RING_HEIGHT, 0);
     scene.add(skydome);
 }
 
@@ -488,11 +506,18 @@ function update() {
             ring.position.y += ring.userData.direction * RING_SPEED * delta_t;
 
             // change direction
-            if (ring.position.y < 0 || ring.position.y >= CYLINDER_HEIGHT - RING_HEIGHT)
+            if (ring.position.y < 0) {
                 ring.userData.direction = -ring.userData.direction;
+                ring.position.y = 0;
+            }
+            else if (ring.position.y >= CYLINDER_HEIGHT - RING_HEIGHT) {
+                ring.userData.direction = -ring.userData.direction;
+                ring.position.y = CYLINDER_HEIGHT - RING_HEIGHT
+            }
         }
     }
     cylinder.rotateY(CYLINDER_SPEED * delta_t);
+    mobiusStrip.rotateY(4 * CYLINDER_SPEED * delta_t);
 }
 
 /////////////
@@ -509,9 +534,13 @@ function render() {
 function init() {
     'use strict';
     renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setClearColor(0xFFFFFF);
+    renderer.setClearColor(0x000000);
     document.body.appendChild(renderer.domElement);
+
+    document.body.appendChild(VRButton.createButton(renderer));
+    renderer.xr.enabled = true;
 
     createScene();
     camera1 = createPerspectiveCamera(150, 150, 150);
@@ -533,7 +562,7 @@ function animate() {
     delta_t = clock.getDelta();
     update();
     render();
-    requestAnimationFrame(animate);
+    renderer.setAnimationLoop(animate);
 }
 
 ////////////////////////////
@@ -562,7 +591,7 @@ function changeToShading(index) {
     for (let i = 0; i < RING_NUMBER; i++) {
         rings[i].object.children[0].material = materials[i][index];
         for (let j = 0; j < SURFACE_NUMBER; j++)
-            rings[i].surfaces[j].children[0].material = materials[SURFACES_INDEX][index];
+            rings[i].surfaces[j].children[0].material = materials[3 + i][index];
     }
 }
 
