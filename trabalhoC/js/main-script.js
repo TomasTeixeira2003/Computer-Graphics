@@ -20,8 +20,8 @@ const SKYDOME_THETA_START = 0;
 const SKYDOME_THETA_LENGHT = Math.PI / 2;
 
 // mobius strip
-const MOBIUS_RADIUS = 30;
-const MOBIUS_WIDTH = 8;
+const MOBIUS_RADIUS = 45;
+const MOBIUS_WIDTH = 16;
 
 // cylinder
 const CYLINDER_RADIUS = 20;
@@ -99,7 +99,7 @@ var colors = [
     0x0D41E1,           // outer ring
     0xFF00FF,           // parametric surfaces
     0xACEDFD,           // cylinder
-    0x00FF00            // mobius strip
+    0x007700            // mobius strip
 ]
 
 // skydome and skydome textures
@@ -299,26 +299,27 @@ function createMobiusStrip() {
     mobiusStrip.position.set(0, 100, 0);
     geometry = new THREE.BufferGeometry();
 
-    const r = MOBIUS_RADIUS;
-    const w = MOBIUS_WIDTH/2;
-    // convert array and create indicesArray
+    // 0.38
+    // 0.71
+    // 0.92
+    // create verticesArray and indicesArray
     const verticesArray = new Float32Array([
-        r, w, 0,
-        r, -w, 0,
-        r * Math.cos(Math.PI/4), w, r * Math.sin(Math.PI/4),
-        r * Math.cos(Math.PI/4), -w, r * Math.sin(Math.PI/4),
-        0, w, r+w,
-        0, -w, r-w,
-        (r+w) * Math.cos(3*Math.PI/4), w, (r+w) * Math.sin(3*Math.PI/4),
-        (r-w) * Math.cos(3*Math.PI/4), -w, (r-w) * Math.sin(3*Math.PI/4),
-        -(r+w), 0, 0,
-        -(r-w), 0, 0,
-        (r+w) * Math.cos(5*Math.PI/4), 0, (r+w) * Math.sin(5*Math.PI/4),
-        (r-w) * Math.cos(5*Math.PI/4), 0, (r-w) * Math.sin(5*Math.PI/4),
-        0, -w, -(r+w),
-        0, w, -(r-w),
-        (r+w) * Math.cos(7*Math.PI/4), -w, (r+w) * Math.sin(7*Math.PI/4),
-        (r-w) * Math.cos(7*Math.PI/4), w, (r-w) * Math.sin(7*Math.PI/4),
+        MOBIUS_RADIUS, MOBIUS_WIDTH/2, 0,
+        MOBIUS_RADIUS, -MOBIUS_WIDTH/2, 0,
+        0.71 * MOBIUS_RADIUS , MOBIUS_WIDTH/2, 0.71 * MOBIUS_RADIUS,
+        0.71 * MOBIUS_RADIUS, -MOBIUS_WIDTH/2, 0.71 * MOBIUS_RADIUS,
+        0, 0.71*MOBIUS_WIDTH/2, MOBIUS_RADIUS+0.71*MOBIUS_WIDTH/2,
+        0, -0.71*MOBIUS_WIDTH/2, MOBIUS_RADIUS-0.71*MOBIUS_WIDTH/2,
+        -0.71 * (MOBIUS_RADIUS+0.71*MOBIUS_WIDTH/2), 0.71*MOBIUS_WIDTH/2, 0.71 * (MOBIUS_RADIUS+0.71*MOBIUS_WIDTH/2),
+        -0.71 * (MOBIUS_RADIUS-0.71*MOBIUS_WIDTH/2), -0.71*MOBIUS_WIDTH/2, 0.71 *(MOBIUS_RADIUS-0.71*MOBIUS_WIDTH/2),
+        -(MOBIUS_RADIUS+MOBIUS_WIDTH/2), 0, 0,
+        -(MOBIUS_RADIUS-MOBIUS_WIDTH/2), 0, 0,
+        -0.71 * (MOBIUS_RADIUS+MOBIUS_WIDTH/2), 0, -0.71 * (MOBIUS_RADIUS+MOBIUS_WIDTH/2),
+        -0.71 * (MOBIUS_RADIUS-MOBIUS_WIDTH/2), 0, -0.71 * (MOBIUS_RADIUS-MOBIUS_WIDTH/2),
+        0, -0.71*MOBIUS_WIDTH/2, -(MOBIUS_RADIUS+0.71*MOBIUS_WIDTH/2),
+        0, 0.71*MOBIUS_WIDTH/2, -(MOBIUS_RADIUS-0.71*MOBIUS_WIDTH/2),
+        0.71 * (MOBIUS_RADIUS+0.71*MOBIUS_WIDTH/2), -0.71*MOBIUS_WIDTH/2, -0.71 * (MOBIUS_RADIUS+0.71*MOBIUS_WIDTH/2),
+        0.71 * (MOBIUS_RADIUS-0.71*MOBIUS_WIDTH/2), 0.71*MOBIUS_WIDTH/2, -0.71 * (MOBIUS_RADIUS-0.71*MOBIUS_WIDTH/2)
     ]);
     const indicesArray = [
         0,1,2,
@@ -347,7 +348,7 @@ function createMobiusStrip() {
     mesh = new THREE.Mesh(geometry, materials[MOBIUS_STRIP_INDEX][GOURAUD_INDEX]);
 
     for (let i = 0; i < 2 * Math.PI; i += Math.PI / 4) {
-        const light = new THREE.PointLight(0xffffff, 40, 250);
+        const light = new THREE.PointLight(0xffffff, 60, 250);
         light.position.set((MOBIUS_RADIUS + 1) * Math.cos(i), 0, (MOBIUS_RADIUS + 1) * Math.sin(i));
         mesh.add(light);
         pointLights.push(light);
@@ -489,7 +490,6 @@ function update() {
         }
     }
     cylinder.rotateY(CYLINDER_SPEED * delta_t);
-    mobiusStrip.rotateY(5 * CYLINDER_SPEED * delta_t);
 }
 
 /////////////
