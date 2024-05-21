@@ -49,6 +49,7 @@ const PLANE_WIDTH = 8;
 const RING_NUMBER = 3;
 const SURFACE_NUMBER = 8;
 const POINT_LIGHT_NUMBER = 8;
+const SPOT_LIGHT_NUMBER = 32;
 
 // speeds
 const SURFACE_SPEED = 2;
@@ -72,7 +73,7 @@ var scene, renderer, camera, camera1, camera2;
 
 // lights
 var ambientLight, directionalLight;
-var pointLights = [];
+var pointLights = [], spotLights = [];
 
 // object3D(s)
 var carousel, mobiusStrip, cylinder, innerRing, middleRing, outerRing;
@@ -261,23 +262,25 @@ function createStereoCamera() {
 /////////////////////
 /* CREATE LIGHT(S) */
 /////////////////////
-function addSpotlightToSurface(surface) {
-    var spotlight = new THREE.SpotLight(0xffffff, 1);
-    spotlight.position.set(0, 100, 0); // Ajuste a posição conforme necessário
+function addSpotlightToSurface(surface, ring, i) {
+    var spotlight = new THREE.SpotLight(0xffffff, 500);
     spotlight.castShadow = true;
     spotlight.shadow.mapSize.width = 1024;
     spotlight.shadow.mapSize.height = 1024;
     spotlight.shadow.camera.near = 0.5;
     spotlight.shadow.camera.far = 500;
 
-    // Direciona a luz para o centro da surface
-    spotlight.target.position.set(0, 0, 0);
-    surface.add(spotlight);
-    surface.add(spotlight.target);
+    ring.object.add(spotlight);
 
-    // Adicione a spotlight à cena global se necessário
-    scene.add(spotlight);
-    scene.add(spotlight.target);
+    spotlight.position.set(
+        ring.innerRadius * Math.cos(i * Math.PI / 4),
+        RING_HEIGHT + 2,
+        ring.innerRadius * Math.sin(i * Math.PI / 4)
+    );
+
+    spotlight.target = surface;
+
+    spotLights.push(spotlight); //in order to be able to turn them on/off
 }
 
 ////////////////////////
@@ -370,7 +373,7 @@ function createSurfaces(ring, ringIndex) {
         );
 
         surface.add(mesh);
-        addSpotlightToSurface(surface);
+        addSpotlightToSurface(surface, ring, i);
     }
 }
 
@@ -508,6 +511,7 @@ function init() {
 
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
+    window.addEventListener('resize', onResize, false);
 }
 
 /////////////////////
@@ -527,7 +531,10 @@ function animate() {
 ////////////////////////////
 function onResize() {
     'use strict';
-
+   
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);  
 }
 
 ///////////////////////
@@ -567,6 +574,9 @@ function onKeyDown(e) {
             for (let i = 0; i < POINT_LIGHT_NUMBER; i++)
                 pointLights[i].visible = !pointLights[i].visible;
             break;
+        case 83: //S
+             for (let i = 0; i < SPOT_LIGHT_NUMBER; i++)
+                spotLights[i].visible = !spotLights[i].visible;
         case 84: //T
             if (carousel.userData.lighting) {
                 changeToShading(BASIC_INDEX);
