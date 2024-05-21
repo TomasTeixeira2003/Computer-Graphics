@@ -299,28 +299,30 @@ function createMobiusStrip() {
     mobiusStrip.position.set(0, 100, 0);
     geometry = new THREE.BufferGeometry();
 
+    const r = MOBIUS_RADIUS;
+    const w = MOBIUS_WIDTH/2;
     // convert array and create indicesArray
     const verticesArray = new Float32Array([
-        MOBIUS_RADIUS, MOBIUS_WIDTH/2, 0,
-        MOBIUS_RADIUS, -MOBIUS_WIDTH/2, 0,
-        MOBIUS_RADIUS * Math.cos(Math.PI/4), MOBIUS_WIDTH/2, MOBIUS_RADIUS * Math.sin(Math.PI/4),
-        MOBIUS_RADIUS * Math.cos(Math.PI/4), -MOBIUS_WIDTH/2, MOBIUS_RADIUS * Math.sin(Math.PI/4),
-        0, MOBIUS_WIDTH/2, MOBIUS_RADIUS,
-        0, -MOBIUS_WIDTH/2, MOBIUS_RADIUS,
-        MOBIUS_RADIUS * Math.cos(3 * Math.PI/4), MOBIUS_WIDTH/2, MOBIUS_RADIUS * Math.sin(3 * Math.PI/4),
-        MOBIUS_RADIUS * Math.cos(3 * Math.PI/4), -MOBIUS_WIDTH/2, MOBIUS_RADIUS * Math.sin(3 * Math.PI/4),
-        -MOBIUS_RADIUS, MOBIUS_WIDTH/2, 0,
-        -MOBIUS_RADIUS, -MOBIUS_WIDTH/2, 0,
-        MOBIUS_RADIUS * Math.cos(5 * Math.PI/4), MOBIUS_WIDTH/2, MOBIUS_RADIUS * Math.sin(5 * Math.PI/4),
-        MOBIUS_RADIUS * Math.cos(5 * Math.PI/4), -MOBIUS_WIDTH/2, MOBIUS_RADIUS * Math.sin(5 * Math.PI/4),  
-        0, MOBIUS_WIDTH/2, -MOBIUS_RADIUS,
-        0, -MOBIUS_WIDTH/2, -MOBIUS_RADIUS,
-        MOBIUS_RADIUS * Math.cos(7 * Math.PI/4), MOBIUS_WIDTH/2, MOBIUS_RADIUS * Math.sin(7 * Math.PI/4),
-        MOBIUS_RADIUS * Math.cos(7 * Math.PI/4), -MOBIUS_WIDTH/2, MOBIUS_RADIUS * Math.sin(7 * Math.PI/4)
+        r, w, 0,
+        r, -w, 0,
+        r * Math.cos(Math.PI/4), w, r * Math.sin(Math.PI/4),
+        r * Math.cos(Math.PI/4), -w, r * Math.sin(Math.PI/4),
+        0, w, r+w,
+        0, -w, r-w,
+        (r+w) * Math.cos(3*Math.PI/4), w, (r+w) * Math.sin(3*Math.PI/4),
+        (r-w) * Math.cos(3*Math.PI/4), -w, (r-w) * Math.sin(3*Math.PI/4),
+        -(r+w), 0, 0,
+        -(r-w), 0, 0,
+        (r+w) * Math.cos(5*Math.PI/4), 0, (r+w) * Math.sin(5*Math.PI/4),
+        (r-w) * Math.cos(5*Math.PI/4), 0, (r-w) * Math.sin(5*Math.PI/4),
+        0, -w, -(r+w),
+        0, w, -(r-w),
+        (r+w) * Math.cos(7*Math.PI/4), -w, (r+w) * Math.sin(7*Math.PI/4),
+        (r-w) * Math.cos(7*Math.PI/4), w, (r-w) * Math.sin(7*Math.PI/4),
     ]);
     const indicesArray = [
-        0,1,3,
-        1,3,2,
+        0,1,2,
+        2,1,3,
         2,3,4,
         4,3,5,
         4,5,6,
@@ -333,8 +335,8 @@ function createMobiusStrip() {
         12,11,13,
         12,13,14,
         14,13,15,
-        14,15,0,
-        0,15,1
+        14,15,1,
+        1,15,0
     ];
 
     geometry.setAttribute('position', new THREE.BufferAttribute(verticesArray, 3));
@@ -487,7 +489,7 @@ function update() {
         }
     }
     cylinder.rotateY(CYLINDER_SPEED * delta_t);
-    //mobiusStrip.rotateY(3 * CYLINDER_SPEED * delta_t);
+    mobiusStrip.rotateY(5 * CYLINDER_SPEED * delta_t);
 }
 
 /////////////
