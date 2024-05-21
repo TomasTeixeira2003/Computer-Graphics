@@ -168,8 +168,8 @@ function elliptic_torus(a, b, c) {
         u *= 2 * Math.PI;
         v *= 2 * Math.PI;
         const x = (c + a * Math.cos(v)) * Math.cos(u);
-        const y = (c + a * Math.cos(v)) * Math.sin(u);
-        const z = b * Math.sin(v);
+        const y = b * Math.sin(v);
+        const z = (c + a * Math.cos(v)) * Math.sin(u);
         target.set(x, y, z);
     }
 }
@@ -179,8 +179,8 @@ function one_sheeted_hyperboloid(a, c) {
         u *= 2 * Math.PI;
         v = 2 * v - 1;
         const x = a * Math.cosh(v) * Math.cos(u);
-        const y = a * Math.cosh(v) * Math.sin(u);
-        const z = c * Math.sinh(v);
+        const y = c * Math.sinh(v);
+        const z = a * Math.cosh(v) * Math.sin(u);
         target.set(x, y, z);
     }
 }
@@ -196,13 +196,13 @@ function parabolic_hyperboloid(a, b) {
     }
 }
 
-function paraboloid(a) {
+function pillow(a) {
     return function (u, v, target) {
-        v *= 2 * Math.PI;
-        u *= 2;
-        const x = a * u * Math.cos(v);
-        const y = a * u * Math.sin(v);
-        const z = Math.pow(u, 2);
+        v *= Math.PI;
+        u *= 2 * Math.PI;
+        const x = a * Math.cos(u);
+        const y = a * Math.cos(v);
+        const z = a * Math.sin(u) * Math.sin(v)
         target.set(x, y, z);
     }
 }
@@ -212,8 +212,8 @@ function pseudosphere(a) {
         u = (u - 0.5) * 7;
         v *= 2 * Math.PI;
         const x = a * Math.cos(v) / Math.cosh(u);
-        const y = a * Math.sin(v) / Math.cosh(u);
-        const z = a * (u - Math.tanh(u));
+        const y = a * (u - Math.tanh(u));
+        const z = a * Math.sin(v) / Math.cosh(u);
         target.set(x, y, z);
     };
 }
@@ -222,11 +222,11 @@ var paramSurfaces = [
     { func: ParametricGeometries.klein, offset: KLEIN_HEIGHT / 2 },
     { func: ParametricGeometries.mobius3d, offset: 0.5 },
     { func: plane(PLANE_WIDTH, PLANE_HEIGHT), offset: 0 },
-    { func: elliptic_torus(2, 2, 2), offset: 2 },
-    { func: one_sheeted_hyperboloid(2, 2), offset: 2 },
+    { func: elliptic_torus(2, 2, 2), offset: 4 },
+    { func: one_sheeted_hyperboloid(2, 2), offset: 3.1 },
     { func: parabolic_hyperboloid(2, 1), offset: 10},
-    { func: paraboloid(2), offset: 0 },
-    { func: pseudosphere(2), offset: 5 }
+    { func: pillow(2), offset: 2 },
+    { func: pseudosphere(2), offset: 2 }
 ]
 
 /////////////////////
