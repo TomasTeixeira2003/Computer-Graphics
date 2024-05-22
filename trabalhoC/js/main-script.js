@@ -66,6 +66,9 @@ const CARTOON_INDEX = 2;
 const NORMALMAP_INDEX = 3;
 const BASIC_INDEX = 4;
 
+// epsilon
+const EPSILON = -0.0001;
+
 //////////////////////
 /* GLOBAL VARIABLES */
 //////////////////////
@@ -361,7 +364,7 @@ function createMobiusStrip() {
 
     mesh = new THREE.Mesh(geometry, materials[MOBIUS_STRIP_INDEX][GOURAUD_INDEX]);
 
-    for (let i = 0; i < 2 * Math.PI; i += Math.PI / 4) {
+    for (let i = Math.PI / 8, j = 0; i - 17 * Math.PI / 8 < EPSILON; i += Math.PI / 4, j++) {
         const light = new THREE.PointLight(0xffffff, 60, 250);
         light.position.set((MOBIUS_RADIUS + 1) * Math.cos(i), 0, (MOBIUS_RADIUS + 1) * Math.sin(i));
         mesh.add(light);
