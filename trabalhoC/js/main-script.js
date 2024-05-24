@@ -1,8 +1,5 @@
 import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { VRButton } from 'three/addons/webxr/VRButton.js';
-import * as Stats from 'three/addons/libs/stats.module.js';
-import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 import { ParametricGeometry } from 'three/addons/geometries/ParametricGeometry.js';
 import { ParametricGeometries } from "three/addons/geometries/ParametricGeometries.js";
 
@@ -49,7 +46,7 @@ const PLANE_WIDTH = 8;
 const RING_NUMBER = 3;
 const SURFACE_NUMBER = 8;
 const POINT_LIGHT_NUMBER = 8;
-const SPOT_LIGHT_NUMBER = 32;
+const SPOT_LIGHT_NUMBER = 24;
 
 // speeds
 const SURFACE_SPEED = 2;
@@ -76,13 +73,14 @@ var ambientLight, directionalLight;
 var pointLights = [], spotLights = [];
 
 // object3D(s)
-var carousel, innerRing, middleRing, outerRing;
+var carousel;
 var innerRing = new THREE.Object3D();
 var middleRing = new THREE.Object3D();
 var outerRing = new THREE.Object3D();
 
 // meshes
 var mobiusStrip, cylinder;
+var geometry, mesh;
 
 var rings = [
     { object: innerRing, innerRadius: IRING_IRADIUS, outerRadius: IRING_ORADIUS, surfaces: [], rSurfaces: IRING_SURFACES_RADIUS },
@@ -94,8 +92,7 @@ var rings = [
 var clock = new THREE.Clock();
 var delta_t;
 
-var geometry, mesh;
-
+// colors
 var colors = [
     0x07C8F9,           // inner ring
     0x0A85ED,           // medium ring
@@ -109,6 +106,7 @@ var colors = [
 
 // skydome and skydome textures
 var skydome;
+
 // the still taken from the video was upscaled for better visual results
 var map = new THREE.TextureLoader().load('textures/texture.png');
 var bmap = new THREE.TextureLoader().load('textures/bumpmap.png');
@@ -282,15 +280,10 @@ function createPerspectiveCamera(x, y, z) {
     return camera;
 }
 
-function createStereoCamera(x, y, z) {
-    var camera = new THREE.StereoCamera();
-    return camera;
-}
-
 /////////////////////
 /* CREATE LIGHT(S) */
 /////////////////////
-function addSpotlightToSurface(surface, ring, i) {
+function addSpotlightToSurface(surface, ring, surfaceIndex) {
     var spotlight = new THREE.SpotLight(0xffffff, 500);
     spotlight.castShadow = true;
     spotlight.shadow.mapSize.width = 1024;
@@ -301,13 +294,13 @@ function addSpotlightToSurface(surface, ring, i) {
     ring.object.add(spotlight);
 
     spotlight.position.set(
-        ring.innerRadius * Math.cos(i * Math.PI / 4),
+        ring.innerRadius * Math.cos(surfaceIndex * Math.PI / 4),
         RING_HEIGHT + 2,
-        ring.innerRadius * Math.sin(i * Math.PI / 4)
+        ring.innerRadius * Math.sin(surfaceIndex * Math.PI / 4)
     );
 
     spotlight.target = surface;
-    spotLights.push(spotlight); //in order to be able to turn them on/off
+    spotLights.push(spotlight); // in order to be able to turn them on/off
 }
 
 ////////////////////////
@@ -528,12 +521,11 @@ function init() {
 
     createScene();
     camera1 = createPerspectiveCamera(150, 150, 150);
-    camera2 = createStereoCamera();
+    camera2 = new THREE.StereoCamera();
 
     camera = camera1;
 
     window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("keyup", onKeyUp);
     window.addEventListener('resize', onResize, false);
 }
 
@@ -599,8 +591,9 @@ function onKeyDown(e) {
                 pointLights[i].visible = !pointLights[i].visible;
             break;
         case 83: //S
-             for (let i = 0; i < SPOT_LIGHT_NUMBER; i++)
+            for (let i = 0; i < SPOT_LIGHT_NUMBER; i++)
                 spotLights[i].visible = !spotLights[i].visible;
+            break;
         case 84: //T
             if (carousel.userData.lighting) {
                 changeToShading(BASIC_INDEX);
@@ -630,13 +623,6 @@ function onKeyDown(e) {
         
         
     }
-}
-
-///////////////////////
-/* KEY UP CALLBACK */
-///////////////////////
-function onKeyUp(e) {
-    'use strict';
 }
 
 init();
