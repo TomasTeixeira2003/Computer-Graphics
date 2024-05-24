@@ -53,7 +53,7 @@ const SPOT_LIGHT_NUMBER = 32;
 
 // speeds
 const SURFACE_SPEED = 2;
-const CYLINDER_SPEED = 0.1;
+const CAROUSEL_SPEED = 0.1;
 const RING_SPEED = 10;
 
 // indexes
@@ -66,9 +66,6 @@ const CARTOON_INDEX = 2;
 const NORMALMAP_INDEX = 3;
 const BASIC_INDEX = 4;
 
-// epsilon
-const EPSILON = -0.0001;
-
 //////////////////////
 /* GLOBAL VARIABLES */
 //////////////////////
@@ -79,10 +76,13 @@ var ambientLight, directionalLight;
 var pointLights = [], spotLights = [];
 
 // object3D(s)
-var carousel, mobiusStrip, cylinder, innerRing, middleRing, outerRing;
+var carousel, innerRing, middleRing, outerRing;
 var innerRing = new THREE.Object3D();
 var middleRing = new THREE.Object3D();
 var outerRing = new THREE.Object3D();
+
+// meshes
+var mobiusStrip, cylinder;
 
 var rings = [
     { object: innerRing, innerRadius: IRING_IRADIUS, outerRadius: IRING_ORADIUS, surfaces: [], rSurfaces: IRING_SURFACES_RADIUS },
@@ -116,55 +116,55 @@ var dmap = new THREE.TextureLoader().load('textures/displacementmap.png');
 
 var materials = [
     [new THREE.MeshLambertMaterial({ color: colors[0] }),
-    new THREE.MeshPhongMaterial({ color: colors[0] }),
+    new THREE.MeshPhongMaterial({ color: colors[0], shininess: 50, specular: 0x6e6e6e }),
     new THREE.MeshToonMaterial({ color: colors[0] }),
     new THREE.MeshNormalMaterial(),
     new THREE.MeshBasicMaterial({ color: colors[0] })
     ],
     [new THREE.MeshLambertMaterial({ color: colors[1] }),
-    new THREE.MeshPhongMaterial({ color: colors[1] }),
+    new THREE.MeshPhongMaterial({ color: colors[1], shininess: 50, specular: 0x6e6e6e }),
     new THREE.MeshToonMaterial({ color: colors[1] }),
     new THREE.MeshNormalMaterial(),
     new THREE.MeshBasicMaterial({ color: colors[1] })
     ],
     [new THREE.MeshLambertMaterial({ color: colors[2] }),
-    new THREE.MeshPhongMaterial({ color: colors[2] }),
+    new THREE.MeshPhongMaterial({ color: colors[2], shininess: 50, specular: 0x6e6e6e }),
     new THREE.MeshToonMaterial({ color: colors[2] }),
     new THREE.MeshNormalMaterial(),
     new THREE.MeshBasicMaterial({ color: colors[2] })
     ],
     [new THREE.MeshLambertMaterial({ color: colors[3], side: THREE.DoubleSide }),
-    new THREE.MeshPhongMaterial({ color: colors[3], side: THREE.DoubleSide }),
+    new THREE.MeshPhongMaterial({ color: colors[3], side: THREE.DoubleSide, shininess: 50, specular: 0x6e6e6e}),
     new THREE.MeshToonMaterial({ color: colors[3], side: THREE.DoubleSide }),
     new THREE.MeshNormalMaterial({ side: THREE.DoubleSide }),
     new THREE.MeshBasicMaterial({ color: colors[3], side: THREE.DoubleSide })
     ],
     [new THREE.MeshLambertMaterial({ color: colors[4], side: THREE.DoubleSide }),
-    new THREE.MeshPhongMaterial({ color: colors[4], side: THREE.DoubleSide }),
+    new THREE.MeshPhongMaterial({ color: colors[4], side: THREE.DoubleSide, shininess: 50, specular: 0x6e6e6e}),
     new THREE.MeshToonMaterial({ color: colors[4], side: THREE.DoubleSide }),
     new THREE.MeshNormalMaterial({ side: THREE.DoubleSide }),
     new THREE.MeshBasicMaterial({ color: colors[4], side: THREE.DoubleSide })
     ],
     [new THREE.MeshLambertMaterial({ color: colors[5], side: THREE.DoubleSide }),
-    new THREE.MeshPhongMaterial({ color: colors[5], side: THREE.DoubleSide }),
+    new THREE.MeshPhongMaterial({ color: colors[5], side: THREE.DoubleSide, shininess: 50, specular: 0x6e6e6e}),
     new THREE.MeshToonMaterial({ color: colors[5], side: THREE.DoubleSide }),
     new THREE.MeshNormalMaterial({ side: THREE.DoubleSide }),
     new THREE.MeshBasicMaterial({ color: colors[5], side: THREE.DoubleSide })
     ],
     [new THREE.MeshLambertMaterial({ color: colors[6] }),
-    new THREE.MeshPhongMaterial({ color: colors[6] }),
+    new THREE.MeshPhongMaterial({ color: colors[6], shininess: 50, specular: 0x6e6e6e }),
     new THREE.MeshToonMaterial({ color: colors[6] }),
     new THREE.MeshNormalMaterial(),
     new THREE.MeshBasicMaterial({ color: colors[6] })
     ],
     [new THREE.MeshLambertMaterial({ color: colors[7], side: THREE.DoubleSide }),
-    new THREE.MeshPhongMaterial({ color: colors[7], side: THREE.DoubleSide }),
+    new THREE.MeshPhongMaterial({ color: colors[7], side: THREE.DoubleSide, shininess: 50, specular: 0x005c00 }),
     new THREE.MeshToonMaterial({ color: colors[7], side: THREE.DoubleSide }),
     new THREE.MeshNormalMaterial({ side: THREE.DoubleSide }),
     new THREE.MeshBasicMaterial({ color: colors[7], side: THREE.DoubleSide })
     ],
     [new THREE.MeshLambertMaterial({ map: map, side: THREE.BackSide, bumpMap: bmap, bumpScale: 8, displacementMap: dmap, displacementScale: 2, }),
-    new THREE.MeshPhongMaterial({ map: map, side: THREE.BackSide, bumpMap: bmap, bumpScale: 8, displacementMap: dmap, displacementScale: 2, }),
+    new THREE.MeshPhongMaterial({ map: map, side: THREE.BackSide, bumpMap: bmap, bumpScale: 8, displacementMap: dmap, displacementScale: 2, shininess: 50, specular: 0x6e6e6e }),
     new THREE.MeshToonMaterial({ map: map, side: THREE.BackSide, bumpMap: bmap, bumpScale: 8, displacementMap: dmap, displacementScale: 2, }),
     new THREE.MeshNormalMaterial({ side: THREE.BackSide, bumpMap: bmap, bumpScale: 8, displacementMap: dmap, displacementScale: 2, }),
     new THREE.MeshBasicMaterial({ map: map, side: THREE.BackSide, })
@@ -307,7 +307,6 @@ function addSpotlightToSurface(surface, ring, i) {
     );
 
     spotlight.target = surface;
-
     spotLights.push(spotlight); //in order to be able to turn them on/off
 }
 
@@ -315,8 +314,6 @@ function addSpotlightToSurface(surface, ring, i) {
 /* CREATE OBJECT3D(S) */
 ////////////////////////
 function createMobiusStrip() {
-    mobiusStrip = new THREE.Object3D();
-    mobiusStrip.position.set(0, 100, 0);
     geometry = new THREE.BufferGeometry();
 
     // 0.71 constant is used as an approximation of sqrt(2)/2
@@ -362,45 +359,36 @@ function createMobiusStrip() {
     geometry.computeVertexNormals();
     geometry.normalsNeedUpdate = true;
 
-    mesh = new THREE.Mesh(geometry, materials[MOBIUS_STRIP_INDEX][GOURAUD_INDEX]);
+    mobiusStrip = new THREE.Mesh(geometry, materials[MOBIUS_STRIP_INDEX][GOURAUD_INDEX]);
+    mobiusStrip.position.set(0, 100, 0);
 
-    for (let i = Math.PI / 8, j = 0; i - 17 * Math.PI / 8 < EPSILON; i += Math.PI / 4, j++) {
+    for (let i = 0; i < 8; i++) {
+        const u = (i / 8) * 2 * Math.PI + Math.PI / 6;
         const light = new THREE.PointLight(0xffffff, 60, 250);
-        light.position.set((MOBIUS_RADIUS + 1) * Math.cos(i), 0, (MOBIUS_RADIUS + 1) * Math.sin(i));
-        mesh.add(light);
+        light.position.set(-(MOBIUS_RADIUS + 1.5) * Math.cos(u), 0, -(MOBIUS_RADIUS + 1.5) * Math.sin(u));
+        mobiusStrip.add(light);
         pointLights.push(light);
-        const sphereSize = 1;
-        const pointLightHelper = new THREE.PointLightHelper( light, sphereSize );
-        scene.add( pointLightHelper );
     }
 
     scene.add(mobiusStrip);
-    mobiusStrip.add(mesh);
 }
 
 function createSurfaces(ring, ringIndex) {
     for (var i = 0; i < SURFACE_NUMBER; i++) {
-        ring.surfaces[i] = new THREE.Object3D();
-        var surface = ring.surfaces[i];
-        surface.position.set(
-            ring.rSurfaces * Math.cos(i * Math.PI / 4),
-            RING_HEIGHT,
-            ring.rSurfaces * Math.sin(i * Math.PI / 4)
-        );
-        ring.object.add(surface);
-
         geometry = new ParametricGeometry(paramSurfaces[(i + ringIndex) % SURFACE_NUMBER].func, 100, 100);
         geometry.normalsNeedUpdate = true;
-        mesh = new THREE.Mesh(geometry, materials[3 + ringIndex][GOURAUD_INDEX]);
-        mesh.scale.set(ringIndex + 1, ringIndex + 1, ringIndex + 1);
-        mesh.rotation.set(-Math.PI / 2, 0, Math.PI / 3 * (3 * (ringIndex + 1) + i));
-        mesh.position.set(
-            0,
-            paramSurfaces[(i + ringIndex) % SURFACE_NUMBER].offset * (ringIndex + 1),
-            0,
+        ring.surfaces[i] = new THREE.Mesh(geometry, materials[3 + ringIndex][GOURAUD_INDEX]);
+        var surface = ring.surfaces[i];
+
+        surface.scale.set(ringIndex + 1, ringIndex + 1, ringIndex + 1);
+        surface.rotation.set(-Math.PI / 2, 0, Math.PI / 3 * (3 * (ringIndex + 1) + i));
+        surface.position.set(
+            ring.rSurfaces * Math.cos(i * Math.PI / 4),
+            RING_HEIGHT + paramSurfaces[(i + ringIndex) % SURFACE_NUMBER].offset * (ringIndex + 1),
+            ring.rSurfaces * Math.sin(i * Math.PI / 4),
         );
 
-        surface.add(mesh);
+        ring.object.add(surface);
         addSpotlightToSurface(surface, ring, i);
     }
 }
@@ -429,7 +417,7 @@ function createRing(ring, initial_height, ringIndex) {
     ring.object.userData = { moving: true, direction: 1 };
     ring.object.position.set(0, initial_height, 0);
 
-    cylinder.add(ring.object);
+    carousel.add(ring.object);
 
     const path = new THREE.Curve();
     path.getPoint = function (t) { return new THREE.Vector3(0, 0, RING_HEIGHT * t); };
@@ -450,16 +438,11 @@ function createRing(ring, initial_height, ringIndex) {
 function createCenterCylinder() {
     'use strict';
 
-    cylinder = new THREE.Object3D();
-    cylinder.position.set(0, 0, 0);
-
-    carousel.add(cylinder);
-
     geometry = new THREE.CylinderGeometry(CYLINDER_RADIUS, CYLINDER_RADIUS, CYLINDER_HEIGHT);
     geometry.normalsNeedUpdate = true;
-    mesh = new THREE.Mesh(geometry, materials[CYLINDER_INDEX][GOURAUD_INDEX]);
-    mesh.position.set(0, CYLINDER_HEIGHT / 2, 0);
-    cylinder.add(mesh);
+    cylinder = new THREE.Mesh(geometry, materials[CYLINDER_INDEX][GOURAUD_INDEX]);
+    cylinder.position.set(0, CYLINDER_HEIGHT / 2, 0);
+    carousel.add(cylinder);
 
     for (var ringIndex = 0; ringIndex < RING_NUMBER; ringIndex++)
         createRing(rings[ringIndex], RING_HEIGHT * (RING_NUMBER - ringIndex-1), ringIndex);
@@ -498,10 +481,9 @@ function createSkydome() {
 function update() {
     'use strict';
     for (var ringIndex = 0; ringIndex < RING_NUMBER; ringIndex++) {
-
         // rotate surfaces
         for (var surfaceIndex = 0; surfaceIndex < SURFACE_NUMBER; surfaceIndex++)
-            rings[ringIndex].surfaces[surfaceIndex].rotateY(SURFACE_SPEED * delta_t);
+            rings[ringIndex].surfaces[surfaceIndex].rotateZ(SURFACE_SPEED * delta_t);
 
         // move rings
         var ring = rings[ringIndex].object
@@ -519,8 +501,7 @@ function update() {
             }
         }
     }
-    cylinder.rotateY(CYLINDER_SPEED * delta_t);
-    mobiusStrip.rotateY(4 * CYLINDER_SPEED * delta_t);
+    carousel.rotateY(CAROUSEL_SPEED * delta_t);
 }
 
 /////////////
@@ -588,13 +569,12 @@ function changeToShading(index) {
         return;
 
     skydome.material = materials[SKYDOME_INDEX][index];
-    cylinder.children[0].material = materials[CYLINDER_INDEX][index];
-    mobiusStrip.children[0].material = materials[MOBIUS_STRIP_INDEX][index];
-    skydome
+    cylinder.material = materials[CYLINDER_INDEX][index];
+    mobiusStrip.material = materials[MOBIUS_STRIP_INDEX][index];
     for (let i = 0; i < RING_NUMBER; i++) {
         rings[i].object.children[0].material = materials[i][index];
         for (let j = 0; j < SURFACE_NUMBER; j++)
-            rings[i].surfaces[j].children[0].material = materials[3 + i][index];
+            rings[i].surfaces[j].material = materials[3 + i][index];
     }
 }
 
