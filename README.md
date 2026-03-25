@@ -11,9 +11,10 @@ This repository showcases three core projects developed for the **Computer Graph
 
 Before writing any code, this project focused on the architectural planning of a 3D environment. It involved creating a blueprint for a scene that balances geometric complexity with logical structure.
 
+### Key Features
 * **Technical Sketches**: Manual drafting of orthographic projections (Top, Front, and Side views) to define precise coordinates and scales for all objects.
 * **Scene Graph Design**: Establishing a formal **Hierarchical Structure**. This ensured that transformations (like moving a table) would correctly affect all child components (like the objects on top of it).
-* **I
+* **Interaction Planning**: Mapping out user controls and camera placements to ensure an intuitive 3D experience.
 
 ---
 
